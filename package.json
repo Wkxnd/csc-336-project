@@ -14,7 +14,10 @@
 		"format": "prettier --write .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
-		"test:e2e": "playwright install && playwright test"
+		"test:e2e": "playwright install && playwright test",
+		"migrate:up": "node --env-file=.env migrations/migrate.mjs up",
+		"migrate:reset": "node --env-file=.env migrations/migrate.mjs reset",
+		"migrate:create": "node migrations/migrate.mjs create"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -41,5 +44,8 @@
 		"vite": "^8.0.16",
 		"vitest": "^4.1.8",
 		"vitest-browser-svelte": "^2.1.1"
+	},
+	"dependencies": {
+		"postgres": "^3.4.9"
 	}
 }
