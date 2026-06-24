@@ -4,8 +4,7 @@
 -- Enums
 CREATE TYPE role_type AS ENUM ('faculty', 'student');
 CREATE TYPE attendance_status AS ENUM ('present', 'absent', 'late', 'excused');
-CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'expired');
-CREATE TYPE subscription_plan AS ENUM ('free', 'basic_faculty', 'premium_faculty');
+CREATE TYPE subscription_plan AS ENUM ('free', 'premium_faculty');
 CREATE TYPE revenue_source AS ENUM ('subscription', 'service_fee', 'ads', 'data_sale');
 
 -- Users table
@@ -42,6 +41,8 @@ CREATE TABLE class_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
     session_date TIMESTAMPTZ NOT NULL,
+    qr_secret VARCHAR(255),
+    attendance_expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -51,22 +52,21 @@ CREATE TABLE attendance_records (
     student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status attendance_status NOT NULL DEFAULT 'absent',
     verified_at TIMESTAMPTZ,
+    ip_address VARCHAR(45),
+    asn INTEGER,
+    user_agent TEXT,
     PRIMARY KEY (session_id, student_id)
 );
 
--- Verification Codes table (For student login verification code, 2NF/3NF clean separation)
-CREATE TABLE verification_codes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID NOT NULL,
-    student_id UUID NOT NULL,
-    code VARCHAR(10) NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    status verification_status NOT NULL DEFAULT 'pending',
+-- Class Network Restrictions table (Composite primary key 2NF)
+CREATE TABLE class_network_restrictions (
+    class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    allowed_asn INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    FOREIGN KEY (session_id, student_id) REFERENCES attendance_records(session_id, student_id) ON DELETE CASCADE
+    PRIMARY KEY (class_id, allowed_asn)
 );
 
--- User Sessions table (For managing active user logins in database without Redis)
+-- User Sessions table (For managing active user login sessions in DB without Redis)
 CREATE TABLE user_sessions (
     id VARCHAR(255) PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -101,11 +101,9 @@ CREATE INDEX idx_classes_faculty_id ON classes(faculty_id);
 CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 CREATE INDEX idx_class_sessions_class_id ON class_sessions(class_id);
 CREATE INDEX idx_attendance_records_student_id ON attendance_records(student_id);
-CREATE INDEX idx_verification_codes_code ON verification_codes(code);
-CREATE INDEX idx_verification_codes_session_student ON verification_codes(session_id, student_id);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_payments_user_id ON payments(user_id);
-CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
 
 -- Views for analytics & read-only reporting
 CREATE VIEW class_attendance_summary AS
