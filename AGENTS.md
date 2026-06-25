@@ -2,7 +2,11 @@
 
 - **Language**: TypeScript
 - **Package Manager**: pnpm
-- **Add-ons**: prettier, eslint, vitest, playwright, tailwindcss, sveltekit-adapter, mcp
+- **Add-ons**: prettier, eslint, vitest, playwright, tailwindcss, sveltekit-adapter, mcp, @lucide/svelte
+
+Use Sveltekit remote functions and svelte's new await support to read, write any data between the client and server. Don't use form actions or REST API routes. Only use +page.ts/+server.ts if its absolutely necessary.
+
+You should modify the DB by editing / creating new migration sql files with the scripts in the package.json. DO NOT CREATE A NEW MIGRATION TO MODIFY SOME EXISTING TABLE. Just modify the existing migration and then reset the DB. Don't include any legacy code / "deprecated" code, this is still a WIP and anything can change.
 
 ---
 

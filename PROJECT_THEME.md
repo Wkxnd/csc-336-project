@@ -2,7 +2,7 @@
 
 Attendance Taking Application
 Concept:
-Allow faculty to adopt a SAAS application to manage their class attendance. The faculty picked a student in the list , and the student must log in the app and receive a security code. Faculty enter the code if matched student is signed in
+Allow faculty to adopt a SAAS application to manage their class attendance. The professor will click some button like start attendance, then he will show a QR code that rotates every 15 or so seconds for the students to scan (similar to how totp codes work). in the future we will add ASN filtering and geofencing to prevent students from attending on the wrong wifi
 
 Potential tables : Core Features / Data Tables (2NF):
 User: Faculty, Students,
@@ -21,6 +21,8 @@ Taking attendance without students cheating on checking in
 
 Revenue Model:
 The platform developer earns income through service fees on each booking, targeted ads, or by selling anonymized usage data (e.g., demand trends by location or service type), or membership
+
+Must add 2 store procs
 
 ## Extra Credit
 

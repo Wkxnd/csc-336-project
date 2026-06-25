@@ -1,0 +1,66 @@
+import { query, command, getRequestEvent } from '$app/server';
+import { sql } from '$lib/server/db';
+import { createHmac } from 'crypto';
+import { uuidSchema, verifyQrCheckInSchema } from '$lib/types';
+
+function getQrToken(secret: string, offset: number = 0): string {
+	const timeWindow = Math.floor(Date.now() / 15000) + offset;
+	return createHmac('sha256', secret).update(timeWindow.toString()).digest('hex');
+}
+
+export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId, token }) => {
+	const { locals, request } = getRequestEvent();
+	if (!locals.user || locals.user.role !== 'student') {
+		throw new Error('Unauthorized');
+	}
+
+	const [session] = await sql<{ qr_secret: string; attendance_expires_at: string | null }[]>`
+		SELECT qr_secret, attendance_expires_at
+		FROM class_sessions
+		WHERE id = ${sessionId}
+	`;
+
+	if (!session) {
+		throw new Error('Session not found');
+	}
+
+	if (session.attendance_expires_at && new Date(session.attendance_expires_at) < new Date()) {
+		throw new Error('Attendance session has closed');
+	}
+
+	const expectedCurrent = getQrToken(session.qr_secret, 0);
+	const expectedPrevious = getQrToken(session.qr_secret, -1);
+
+	if (token !== expectedCurrent && token !== expectedPrevious) {
+		throw new Error('Invalid or expired QR code');
+	}
+
+	const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+	const userAgent = request.headers.get('user-agent') || 'Unknown';
+
+	await sql`
+		INSERT INTO attendance_records (session_id, student_id, status, verified_at, ip_address, user_agent)
+		VALUES (${sessionId}, ${locals.user.id}, 'present', NOW(), ${ip}, ${userAgent})
+		ON CONFLICT (session_id, student_id)
+		DO UPDATE SET status = 'present', verified_at = NOW(), ip_address = ${ip}, user_agent = ${userAgent}
+	`;
+
+	void getStudentLatestCheckInDetails(sessionId).refresh();
+	return { success: true };
+});
+
+export const getStudentLatestCheckInDetails = query(uuidSchema, async (sessionId) => {
+	const { locals } = getRequestEvent();
+	if (!locals.user || locals.user.role !== 'student') return null;
+
+	const [record] = await sql<
+		{ class_name: string; session_date: string; verified_at: string; status: string }[]
+	>`
+		SELECT c.name as class_name, cs.session_date, ar.verified_at, ar.status
+		FROM class_sessions cs
+		JOIN classes c ON cs.class_id = c.id
+		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = ${locals.user.id}
+		WHERE cs.id = ${sessionId}
+	`;
+	return record || null;
+});

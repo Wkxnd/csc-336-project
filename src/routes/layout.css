@@ -1,1 +1,87 @@
 @import 'tailwindcss';
+@import '@fontsource/inter/index.css';
+@import '@fontsource/newsreader/index.css';
+
+@theme {
+	--color-primary: #141010;
+	--color-primary-container: #292524;
+	--color-on-primary-container: #928c8a;
+	--color-on-primary: #ffffff;
+
+	--color-secondary: #625d5c;
+	--color-secondary-container: #e8e1df;
+	--color-on-secondary-container: #686362;
+	--color-on-secondary: #ffffff;
+
+	--color-tertiary: #101111;
+	--color-tertiary-container: #252626;
+	--color-on-tertiary-container: #8d8d8d;
+	--color-on-tertiary: #ffffff;
+
+	--color-background: #fdf8f7;
+	--color-surface: #fdf8f7;
+	--color-surface-dim: #ddd9d8;
+	--color-surface-bright: #fdf8f7;
+	--color-surface-container-lowest: #ffffff;
+	--color-surface-container-low: #f7f3f2;
+	--color-surface-container: #f1edec;
+	--color-surface-container-high: #ece7e6;
+	--color-surface-container-highest: #e6e1e1;
+	--color-on-surface: #1c1b1b;
+	--color-on-surface-variant: #4e4543;
+	--color-inverse-surface: #313030;
+	--color-inverse-on-surface: #f4f0ef;
+
+	--color-outline: #7f7572;
+	--color-outline-variant: #d1c4c1;
+
+	--color-ink: #0c0a09;
+	--color-body: #4e4e4e;
+	--color-muted: #777169;
+	--color-muted-soft: #a8a29e;
+	--color-hairline: #e7e5e4;
+
+	--color-gradient-mint: #a7e5d3;
+	--color-gradient-peach: #f4c5a8;
+	--color-gradient-lavender: #c8b8e0;
+	--color-gradient-sky: #a8c8e8;
+	--color-gradient-rose: #e8b8c4;
+
+	--color-semantic-error: #dc2626;
+	--color-semantic-success: #16a34a;
+
+	--font-display-mega: 'Newsreader', serif;
+	--font-display-xl: 'Newsreader', serif;
+	--font-display-lg: 'Newsreader', serif;
+	--font-display-md: 'Newsreader', serif;
+	--font-title-md: 'Inter', sans-serif;
+	--font-body-md: 'Inter', sans-serif;
+	--font-body-strong: 'Inter', sans-serif;
+	--font-caption-uppercase: 'Inter', sans-serif;
+	--font-button: 'Inter', sans-serif;
+}
+
+@layer utilities {
+	.fade-in-up {
+		animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+		opacity: 0;
+		transform: translateY(20px);
+	}
+
+	.delay-100 {
+		animation-delay: 100ms;
+	}
+	.delay-200 {
+		animation-delay: 200ms;
+	}
+	.delay-300 {
+		animation-delay: 300ms;
+	}
+
+	@keyframes fadeInUp {
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+}

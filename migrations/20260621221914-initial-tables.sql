@@ -1,6 +1,5 @@
 -- Migration: initial-tables
 -- Created at: 2026-06-21T22:19:14.887Z
-
 -- Enums
 CREATE TYPE role_type AS ENUM ('faculty', 'student');
 CREATE TYPE attendance_status AS ENUM ('present', 'absent', 'late', 'excused');

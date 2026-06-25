@@ -17,7 +17,8 @@
 		"test:e2e": "playwright install && playwright test",
 		"migrate:up": "node --env-file=.env migrations/migrate.mjs up",
 		"migrate:reset": "node --env-file=.env migrations/migrate.mjs reset",
-		"migrate:create": "node migrations/migrate.mjs create"
+		"migrate:create": "node migrations/migrate.mjs create",
+		"seed": "node --env-file=.env migrations/seed.mjs"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -46,6 +47,10 @@
 		"vitest-browser-svelte": "^2.1.1"
 	},
 	"dependencies": {
-		"postgres": "^3.4.9"
+		"@fontsource/inter": "^5.2.8",
+		"@fontsource/newsreader": "^5.2.10",
+		"@lucide/svelte": "^1.21.0",
+		"postgres": "^3.4.9",
+		"valibot": "^1.4.1"
 	}
 }
