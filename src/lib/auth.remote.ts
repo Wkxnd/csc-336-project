@@ -70,7 +70,7 @@ export const login = form(loginSchema, async ({ email, password }, issue) => {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: false,
+		secure: true,
 		maxAge: 60 * 60 * 24 * 7
 	});
 
@@ -106,7 +106,7 @@ export const register = form(
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
-			secure: false,
+			secure: true,
 			maxAge: 60 * 60 * 24 * 7
 		});
 

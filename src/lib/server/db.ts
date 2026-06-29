@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 import { env } from '$env/dynamic/private';
 
-const databaseUrl = env.DATABASE_URL || 'postgres://root:mysecretpassword@localhost:5432/local';
+const databaseUrl = env.DATABASE_URL;
 
 export const sql = postgres(databaseUrl, {
 	max: 10,
