@@ -2,6 +2,8 @@
 @import '@fontsource/inter/index.css';
 @import '@fontsource/newsreader/index.css';
 
+@source '../node_modules/layerchart/**/*.{svelte,js}';
+
 @theme {
 	--color-primary: #141010;
 	--color-primary-container: #292524;
