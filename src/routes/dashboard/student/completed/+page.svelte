@@ -62,14 +62,14 @@
 				Attendance<br />Completed
 			</h1>
 			<p
-				class="fade-in-up delay-100 font-body-md text-body-md text-on-surface-variant mb-xl max-w-md"
+				class="fade-in-up delay-100 font-body-md text-body-md text-on-surface-variant mb-xl max-w-[28rem]"
 			>
 				Your presence has been recorded successfully. You are all set for this lecture session.
 			</p>
 
 			<!-- Details Card -->
 			<div
-				class="fade-in-up delay-200 w-full max-w-md bg-surface-container-lowest border border-hairline rounded-xl p-lg flex flex-col mb-xl shadow-sm"
+				class="fade-in-up delay-200 w-full max-w-[28rem] bg-surface-container-lowest border border-hairline rounded-xl p-lg flex flex-col mb-xl shadow-sm"
 			>
 				<div class="flex justify-between items-center py-sm border-b border-hairline text-left">
 					<span class="font-caption-uppercase text-[11px] text-muted uppercase">Class</span>

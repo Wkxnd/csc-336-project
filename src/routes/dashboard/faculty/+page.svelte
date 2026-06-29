@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { getClasses, createClass } from './data.remote';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -46,7 +46,7 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base">
 			{#each classes as c (c.id)}
 				<a
-					href="{base}/dashboard/faculty/class/{c.id}"
+					href={resolve(`/dashboard/faculty/class/${c.id}`)}
 					class="block group focus:outline-none"
 				>
 					<Card
@@ -74,7 +74,7 @@
 	{/if}
 </div>
 
-<Modal isOpen={isCreateClassOpen} title="Create New Class">
+<Modal bind:isOpen={isCreateClassOpen} title="Create New Class">
 	{#if createClass.fields?.allIssues()?.length}
 		<div
 			class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"

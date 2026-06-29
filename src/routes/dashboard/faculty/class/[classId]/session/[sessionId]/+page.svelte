@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { dev } from '$app/environment';
 	import { onDestroy } from 'svelte';
 	import {
@@ -14,6 +14,7 @@
 	import type { ClassSession } from '$lib/types';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	const classId = $derived(page.params.classId!);
 	const sessionId = $derived(page.params.sessionId!);
@@ -132,7 +133,7 @@
 
 	const checkInUrl = $derived(
 		qrToken
-			? `${window.location.origin}/dashboard/student/check-in?session_id=${sessionId}&token=${qrToken}`
+			? `${window.location.origin}${resolve(`/dashboard/student/check-in?session_id=${sessionId}&token=${qrToken}`)}`
 			: null
 	);
 
@@ -144,29 +145,21 @@
 </script>
 
 <div class="flex flex-col gap-lg h-full">
-	<!-- Breadcrumb -->
-	<nav class="flex items-center gap-xs text-sm text-muted shrink-0 flex-wrap">
-		<a href="{base}/dashboard/faculty" class="hover:text-ink transition-colors">Classes</a>
-		<span class="text-muted-soft">/</span>
-		<a
-			href="{base}/dashboard/faculty/class/{classId}"
-			class="hover:text-ink transition-colors"
-		>
-			{classData?.name || '...'}
-		</a>
-		<span class="text-muted-soft">/</span>
-		<span class="text-ink font-body-strong">
-			{#if session}
-				{new Date(session.session_date).toLocaleDateString(undefined, {
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})}
-			{:else}
-				Session
-			{/if}
-		</span>
-	</nav>
+	<Breadcrumbs
+		crumbs={[
+			{ label: 'Classes', href: '/dashboard/faculty' },
+			{ label: classData?.name || '...', href: `/dashboard/faculty/class/${classId}` },
+			{
+				label: session
+					? new Date(session.session_date).toLocaleDateString(undefined, {
+							month: 'short',
+							day: 'numeric',
+							year: 'numeric'
+						})
+					: 'Session'
+			}
+		]}
+	/>
 
 	{#if session}
 		<!-- Session Header Card -->
@@ -213,66 +206,70 @@
 		</Card>
 
 		<!-- Main Content: QR Code + Counter -->
-		<div class="flex-1 flex flex-col items-center justify-center min-h-0 overflow-y-auto">
+		<div class="flex-1 min-h-0 overflow-y-auto">
 			{#if isAttendanceActive}
-				<!-- Large QR Code -->
-				<div class="flex flex-col items-center gap-base w-full max-w-lg">
-					<div
-						class="w-full max-w-[450px] aspect-square border border-hairline p-md rounded-2xl bg-white flex items-center justify-center shadow-sm"
-					>
-						{#if qrCodeUrl}
-							<img
-								src={qrCodeUrl}
-								alt="Session QR Check-in"
-								class="w-full h-full object-contain"
-							/>
-						{:else}
-							<div class="text-sm text-muted animate-pulse">Generating QR...</div>
-						{/if}
-					</div>
-
-					<!-- Timer -->
-					<div class="w-full max-w-[450px] text-center">
-						<p class="font-body-strong text-ink text-sm">Dynamic Rotating QR</p>
-						<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mt-sm">
-							<div
-								class="h-full bg-ink transition-all duration-1000 ease-linear rounded-full"
-								style="width: {(qrTimeRemaining / 15) * 100}%"
-							></div>
-						</div>
-						<span class="text-[11px] text-muted-soft block mt-1">
-							Refreshes in {qrTimeRemaining}s
-						</span>
-					</div>
-
-					<!-- Live Attendance Counter -->
-					<div
-						class="w-full max-w-[450px] border border-hairline rounded-xl bg-surface-container-lowest p-lg text-center"
-					>
-						{#if liveCount.current}
-							<p class="font-display-lg text-[42px] text-ink tracking-tight leading-none">
-								{liveCount.current.present}/{liveCount.current.total}
-							</p>
-							<p class="text-sm text-muted mt-sm">students present</p>
-						{:else}
-							<p class="text-sm text-muted animate-pulse">Loading count...</p>
-						{/if}
-					</div>
-
-					<!-- Dev copy link -->
-					{#if dev}
-						<button
-							onclick={handleCopyLink}
-							class="text-[12px] font-body-strong text-ink hover:underline border border-hairline px-base py-xs rounded-full bg-surface-card hover:bg-surface-container transition-colors cursor-pointer"
+				<div class="flex flex-col lg:flex-row gap-lg items-start w-full">
+					<!-- QR Code Column -->
+					<div class="flex flex-col items-center gap-sm flex-1 min-w-0">
+						<div
+							class="w-full max-w-[320px] aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
 						>
-							{copySuccess ? 'Copied Link!' : 'Copy Check-in Link'}
-						</button>
-					{/if}
+							{#if qrCodeUrl}
+								<img
+									src={qrCodeUrl}
+									alt="Session QR Check-in"
+									class="w-full h-full object-contain"
+								/>
+							{:else}
+								<div class="text-sm text-muted animate-pulse">Generating QR...</div>
+							{/if}
+						</div>
+
+						<!-- Timer -->
+						<div class="w-full max-w-[320px] text-center">
+							<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+								<div
+									class="h-full bg-ink transition-all duration-1000 ease-linear rounded-full"
+									style="width: {(qrTimeRemaining / 15) * 100}%"
+								></div>
+							</div>
+							<span class="text-[11px] text-muted-soft block mt-1">
+								Refreshes in {qrTimeRemaining}s
+							</span>
+						</div>
+					</div>
+
+					<!-- Stats Column -->
+					<div class="flex flex-col gap-base lg:w-[280px] shrink-0 w-full">
+						<!-- Live Attendance Counter -->
+						<div
+							class="border border-hairline rounded-xl bg-surface-container-lowest p-lg text-center"
+						>
+							{#if liveCount.current}
+								<p class="font-display-lg text-[48px] text-ink tracking-tight leading-none">
+									{liveCount.current.present}/{liveCount.current.total}
+								</p>
+								<p class="text-sm text-muted mt-sm">students present</p>
+							{:else}
+								<p class="text-sm text-muted animate-pulse">Loading count...</p>
+							{/if}
+						</div>
+
+						<!-- Dev copy link -->
+						{#if dev}
+							<button
+								onclick={handleCopyLink}
+								class="text-[12px] font-body-strong text-ink hover:underline border border-hairline px-base py-xs rounded-full bg-surface-card hover:bg-surface-container transition-colors cursor-pointer"
+							>
+								{copySuccess ? 'Copied Link!' : 'Copy Check-in Link'}
+							</button>
+						{/if}
+					</div>
 				</div>
 			{:else}
 				<!-- Inactive State -->
 				<div
-					class="flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest max-w-md w-full"
+					class="flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -289,7 +286,7 @@
 						/>
 					</svg>
 					<h3 class="font-title-md text-ink text-[18px]">Attendance Not Active</h3>
-					<p class="text-muted text-[14px] mt-sm max-w-xs">
+					<p class="text-muted text-[14px] mt-sm max-w-[20rem]">
 						Start an attendance session above to display the dynamic check-in QR code.
 					</p>
 

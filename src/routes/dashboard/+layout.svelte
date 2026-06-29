@@ -45,7 +45,7 @@
 </script>
 
 {#if user}
-	<div class="min-h-screen bg-surface flex relative font-body-md text-body antialiased">
+	<div class="h-screen bg-surface flex relative font-body-md text-body antialiased overflow-hidden">
 		<!-- Sidebar Panel -->
 		<aside
 			class="h-screen border-r border-hairline bg-surface-container-lowest flex flex-col transition-all duration-300 relative z-20 shrink-0 {sidebarOpen
@@ -145,52 +145,36 @@
 		</aside>
 
 		<!-- Main Workspace Content -->
-		<div class="flex-1 flex flex-col h-screen overflow-hidden">
-			<!-- Header Bar -->
-			<header
-				class="h-20 border-b border-hairline px-lg flex items-center justify-between shrink-0"
-			>
-				<div class="flex items-center gap-sm">
-					{#if !sidebarOpen}
-						<button
-							type="button"
-							aria-label="Open sidebar"
-							onclick={() => (sidebarOpen = true)}
-							class="text-muted hover:text-ink transition-colors flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container cursor-pointer"
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="1.5"
-								stroke="currentColor"
-								class="w-5 h-5"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-								/>
-							</svg>
-						</button>
-					{/if}
-					<h2 class="font-title-md text-[18px] text-ink capitalize">{user.role} Portal</h2>
-				</div>
-
-				<div class="text-xs text-muted-soft">
-					Local time: {new Date().toLocaleDateString(undefined, {
-						weekday: 'long',
-						month: 'short',
-						day: 'numeric'
-					})}
-				</div>
-			</header>
-
+		<div class="flex-1 flex flex-col min-h-0">
 			<!-- Content Scroll viewport -->
-			<div class="flex-1 overflow-y-auto p-lg bg-surface relative">
+			<div class="flex-1 overflow-y-auto overflow-x-hidden p-lg bg-surface relative">
+				{#if !sidebarOpen}
+					<button
+						type="button"
+						aria-label="Open sidebar"
+						onclick={() => (sidebarOpen = true)}
+						class="absolute top-lg left-lg text-muted hover:text-ink transition-colors flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container cursor-pointer z-10"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							class="w-5 h-5"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+							/>
+						</svg>
+					</button>
+				{/if}
+
 				<!-- Ambient Gradient Orb -->
 				<div
-					class="absolute -bottom-40 -right-40 w-96 h-96 bg-gradient-mint rounded-full blur-[100px] opacity-10 pointer-events-none"
+					class="fixed -bottom-40 -right-40 w-96 h-96 bg-gradient-mint rounded-full blur-[100px] opacity-10 pointer-events-none"
 				></div>
 				{@render children()}
 			</div>

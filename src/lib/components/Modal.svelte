@@ -40,7 +40,7 @@
 		<!-- Dialog Container -->
 		<div
 			transition:fly={{ y: 20, duration: 300 }}
-			class="relative w-full max-w-lg bg-surface-card border border-hairline rounded-xl shadow-xl z-10 flex flex-col overflow-hidden"
+			class="relative w-full max-w-[32rem] bg-surface-card border border-hairline rounded-xl shadow-xl z-10 flex flex-col overflow-hidden"
 			role="dialog"
 			aria-modal="true"
 		>

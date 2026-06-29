@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { getClass, getSessions, createSession } from './data.remote';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	const classId = $derived(page.params.classId!);
 
@@ -20,17 +21,12 @@
 </script>
 
 <div class="flex flex-col gap-lg h-full">
-	<!-- Breadcrumb -->
-	<nav class="flex items-center gap-xs text-sm text-muted shrink-0">
-		<a
-			href="{base}/dashboard/faculty"
-			class="hover:text-ink transition-colors"
-		>
-			Classes
-		</a>
-		<span class="text-muted-soft">/</span>
-		<span class="text-ink font-body-strong">{classData?.name || 'Loading...'}</span>
-	</nav>
+	<Breadcrumbs
+		crumbs={[
+			{ label: 'Classes', href: '/dashboard/faculty' },
+			{ label: classData?.name || 'Loading...' }
+		]}
+	/>
 
 	{#if classData}
 		<!-- Class Header -->
@@ -78,10 +74,9 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base overflow-y-auto">
 					{#each sessions as s (s.id)}
 						{@const isActive =
-							s.attendance_expires_at !== null &&
-							new Date(s.attendance_expires_at) > new Date()}
+							s.attendance_expires_at !== null && new Date(s.attendance_expires_at) > new Date()}
 						<a
-							href="{base}/dashboard/faculty/class/{classId}/session/{s.id}"
+							href={resolve(`/dashboard/faculty/class/${classId}/session/${s.id}`)}
 							class="block group focus:outline-none"
 						>
 							<Card
@@ -118,7 +113,7 @@
 	{/if}
 </div>
 
-<Modal isOpen={isCreateSessionOpen} title="Create Session">
+<Modal bind:isOpen={isCreateSessionOpen} title="Create Session">
 	<form
 		{...createSession.enhance(async (form) => {
 			if (await form.submit()) {

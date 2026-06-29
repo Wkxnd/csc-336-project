@@ -33,9 +33,9 @@
 	};
 
 	const sizeStyles = {
-		sm: 'px-md py-xs text-[13px] h-8',
-		md: 'px-xl py-base text-button h-10',
-		lg: 'px-xxl py-base text-[16px] h-12'
+		sm: 'px-lg py-xs text-[13px] h-8',
+		md: 'px-xl py-sm text-button h-10',
+		lg: 'px-xl py-base text-[16px] h-12'
 	};
 </script>
 

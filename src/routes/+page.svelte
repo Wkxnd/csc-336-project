@@ -36,7 +36,9 @@
 		class="absolute -top-40 -left-40 w-96 h-96 bg-gradient-peach rounded-full blur-[100px] opacity-15 pointer-events-none"
 	></div>
 
-	<main class="relative z-10 w-full max-w-md flex flex-col items-center text-center fade-in-up">
+	<main
+		class="relative z-10 w-full max-w-[28rem] flex flex-col items-center text-center fade-in-up"
+	>
 		<!-- App Identity -->
 		<div class="flex items-center gap-sm mb-lg">
 			<svg

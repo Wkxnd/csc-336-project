@@ -1,7 +1,13 @@
 import { query, form, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
 import { randomBytes } from 'crypto';
-import { createSessionSchema, uuidSchema, type ClassSession, type Class, type Student } from '$lib/types';
+import {
+	createSessionSchema,
+	uuidSchema,
+	type ClassSession,
+	type Class,
+	type Student
+} from '$lib/types';
 
 export const getClass = query(uuidSchema, async (classId): Promise<Class | null> => {
 	const { locals } = getRequestEvent();

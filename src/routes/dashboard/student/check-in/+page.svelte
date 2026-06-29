@@ -44,7 +44,7 @@
 		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-150 max-h-150 bg-gradient-sky rounded-full blur-[80px] opacity-15 pointer-events-none mix-blend-multiply"
 	></div>
 
-	<main class="relative z-10 w-full max-w-md text-center">
+	<main class="relative z-10 w-full max-w-112 text-center">
 		{#if verifying}
 			<div class="flex flex-col items-center gap-md">
 				<!-- Animated Spinner -->
@@ -85,7 +85,7 @@
 					<h2 class="font-display-md text-[26px] text-ink tracking-tight font-normal">
 						Check-In Failed
 					</h2>
-					<p class="font-body-md text-body-md text-on-surface-variant my-base max-w-sm">
+					<p class="font-body-md text-body-md text-on-surface-variant my-base max-w-96">
 						{errorMsg}
 					</p>
 
