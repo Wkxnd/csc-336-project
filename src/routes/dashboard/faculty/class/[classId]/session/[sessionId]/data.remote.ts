@@ -9,7 +9,6 @@ import {
 	type AttendanceRecord
 } from '$lib/types';
 import { getFaculty } from '$lib/auth.remote';
-import { getSessions } from '../../data.remote';
 
 function getQrToken(secret: string, offset: number = 0): string {
 	const timeWindow = Math.floor(Date.now() / 15000) + offset;

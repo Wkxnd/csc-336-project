@@ -12,8 +12,8 @@
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
-	const classId = $derived(params.classId);
-	const sessionId = $derived(params.sessionId);
+
+	const { classId, sessionId } = $derived(params);
 
 	const classData = $derived(getClass(classId));
 	const session = $derived(await getSession(sessionId));
@@ -104,32 +104,6 @@
 	// 		console.error(e);
 	// 	}
 	// }
-
-	let copySuccess = $state(false);
-	async function handleCopyLink() {
-		if (!checkInUrl) return;
-		try {
-			await navigator.clipboard.writeText(checkInUrl);
-			copySuccess = true;
-			setTimeout(() => {
-				copySuccess = false;
-			}, 2000);
-		} catch (e) {
-			console.error('Failed to copy check-in URL:', e);
-		}
-	}
-
-	const checkInUrl = $derived(
-		qrToken
-			? `${window.location.origin}${resolve(`/dashboard/student/check-in?session_id=${sessionId}&token=${qrToken}`)}`
-			: null
-	);
-
-	// const qrCodeUrl = $derived(
-	// 	checkInUrl
-	// 		? `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkInUrl)}`
-	// 		: null
-	// );
 </script>
 
 <div class="flex flex-col gap-lg h-full">
@@ -199,20 +173,14 @@
 	<!-- Main Content: QR Code + Counter -->
 	<div class="flex-1 min-h-0 overflow-y-auto">
 		{#if isAttendanceActive && qrToken}
+			{@const checkInUrl = `${window.location.origin}${resolve(`/dashboard/student/check-in/${sessionId}/${qrToken}`)}`}
 			<div class="flex flex-col lg:flex-row gap-lg items-start w-full">
 				<!-- QR Code Column -->
 				<div class="flex flex-col items-center gap-sm flex-1 min-w-0">
 					<div
 						class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
 					>
-						<QRCode
-							data={`${window.location.origin}${resolve(`/dashboard/student/check-in?session_id=${sessionId}&token=${qrToken}`)}`}
-						/>
-						<!-- {#if qrCodeUrl}
-							<img src={qrCodeUrl} alt="Session QR Check-in" class="w-full h-full object-contain" />
-						{:else}
-							<div class="text-sm text-muted animate-pulse">Generating QR...</div>
-						{/if} -->
+						<QRCode data={checkInUrl} />
 					</div>
 
 					<!-- Timer -->
@@ -233,23 +201,18 @@
 				<div class="flex flex-col gap-base lg:w-70 shrink-0 w-full">
 					<!-- Live Attendance Counter -->
 					<LiveCount {sessionId} />
-					<!-- <div
-						class="border border-hairline rounded-xl bg-surface-container-lowest p-lg text-center"
-					>
-						{#if liveCount.current}
-							<p class="font-display-lg text-[48px] text-ink tracking-tight leading-none">
-								{liveCount.current.present}/{liveCount.current.total}
-							</p>
-							<p class="text-sm text-muted mt-sm">students present</p>
-						{:else}
-							<p class="text-sm text-muted animate-pulse">Loading count...</p>
-						{/if}
-					</div> -->
 
 					<!-- Dev copy link -->
 					{#if dev}
+						{let copySuccess = $state(false)}
 						<button
-							onclick={handleCopyLink}
+							onclick={async () => {
+								await navigator.clipboard.writeText(checkInUrl);
+								copySuccess = true;
+								setTimeout(() => {
+									copySuccess = false;
+								}, 2000);
+							}}
 							class="text-[12px] font-body-strong text-ink hover:underline border border-hairline px-base py-xs rounded-full bg-surface-card hover:bg-surface-container transition-colors cursor-pointer"
 						>
 							{copySuccess ? 'Copied Link!' : 'Copy Check-in Link'}

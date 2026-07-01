@@ -1,8 +1,9 @@
 import { query, command, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
 import { createHmac } from 'crypto';
-import { requireRole } from '$lib/server/session';
+import { getStudent } from '$lib/auth.remote';
 import { uuidSchema, verifyQrCheckInSchema } from '$lib/types';
+import { error } from '@sveltejs/kit';
 
 function getQrToken(secret: string, offset: number = 0): string {
 	const timeWindow = Math.floor(Date.now() / 15000) + offset;
@@ -10,8 +11,8 @@ function getQrToken(secret: string, offset: number = 0): string {
 }
 
 export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId, token }) => {
-	const { cookies, request } = getRequestEvent();
-	const user = await requireRole(cookies, 'student');
+	const { request } = getRequestEvent();
+	const user = await getStudent();
 
 	const [session] = await sql<{ qr_secret: string | null; attendance_expires_at: string | null }[]>`
 		SELECT qr_secret, attendance_expires_at
@@ -20,22 +21,26 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 	`;
 
 	if (!session) {
-		throw new Error('Session not found');
+		// throw new Error('Session not found');
+		error(404, 'Session not found');
 	}
 
 	if (session.attendance_expires_at && new Date(session.attendance_expires_at) < new Date()) {
-		throw new Error('Attendance session has closed');
+		// throw new Error('Attendance session has closed');
+		error(403, 'Attendance session has closed');
 	}
 
 	if (!session.qr_secret) {
-		throw new Error('QR code not available for this session');
+		// throw new Error('QR code not available for this session');
+		error(403, 'QR code not available for this session');
 	}
 
 	const expectedCurrent = getQrToken(session.qr_secret, 0);
 	const expectedPrevious = getQrToken(session.qr_secret, -1);
 
 	if (token !== expectedCurrent && token !== expectedPrevious) {
-		throw new Error('Invalid or expired QR code');
+		// throw new Error('Invalid or expired QR code');
+		error(400, 'Invalid or expired QR code');
 	}
 
 	const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -48,13 +53,18 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 		DO UPDATE SET status = 'present', verified_at = NOW(), ip_address = ${ip}, user_agent = ${userAgent}
 	`;
 
-	void getStudentLatestCheckInDetails(sessionId).refresh();
-	return { success: true };
+	return {
+		class_name: 'test',
+		session_date: new Date().toISOString(),
+		verified_at: new Date().toISOString(),
+		status: 'present'
+	};
+
+	// void getStudentLatestCheckInDetails(sessionId).refresh();
 });
 
 export const getStudentLatestCheckInDetails = query(uuidSchema, async (sessionId) => {
-	const { cookies } = getRequestEvent();
-	const user = await requireRole(cookies, 'student');
+	const user = await getStudent();
 
 	const [record] = await sql<
 		{ class_name: string; session_date: string; verified_at: string; status: string }[]
