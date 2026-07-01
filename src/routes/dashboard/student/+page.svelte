@@ -6,8 +6,7 @@
 	import Input from '$lib/components/Input.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 
-	const classesQuery = getClasses();
-	const classes = $derived(classesQuery.current || []);
+	const classes = $derived(await getClasses());
 
 	let isEnrollOpen = $state(false);
 </script>

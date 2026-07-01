@@ -1,58 +1,6 @@
 import * as v from 'valibot';
 
-// --- Shared Type Interfaces ---
-
-export interface User {
-	id: string;
-	email: string;
-	firstName: string;
-	lastName: string;
-	role: 'faculty' | 'student';
-}
-
-export interface Class {
-	id: string;
-	faculty_id: string;
-	name: string;
-	code: string;
-	description: string;
-	created_at: string;
-	attendance_rate?: number;
-}
-
-export interface ClassSession {
-	id: string;
-	class_id: string;
-	session_date: string;
-	qr_secret: string;
-	attendance_expires_at: string | null;
-}
-
-export interface AttendanceRecord {
-	student_id: string;
-	first_name: string;
-	last_name: string;
-	email: string;
-	status: 'present' | 'absent' | 'late' | 'excused';
-	verified_at: string | null;
-	ip_address: string | null;
-	user_agent: string | null;
-}
-
-export interface Student {
-	id: string;
-	first_name: string;
-	last_name: string;
-	email: string;
-	enrolled_at?: string;
-}
-
-export interface AttendanceCount {
-	present: number;
-	total: number;
-}
-
-// --- DB Row Types (snake_case as returned by postgres) ---
+// --- DB Row Types ---
 
 export interface UserRow {
 	id: string;
@@ -64,13 +12,72 @@ export interface UserRow {
 	created_at: string;
 }
 
-export interface SessionRow {
+export interface ClassRow {
+	id: string;
+	faculty_id: string;
+	name: string;
+	code: string;
+	description: string | null;
+	created_at: string;
+}
+
+export interface ClassSessionRow {
 	id: string;
 	class_id: string;
 	session_date: string;
-	qr_secret: string;
+	qr_secret: string | null;
 	attendance_expires_at: string | null;
 	created_at: string;
+}
+
+export interface EnrollmentRow {
+	class_id: string;
+	student_id: string;
+	enrolled_at: string;
+}
+
+export interface AttendanceRecordRow {
+	session_id: string;
+	student_id: string;
+	status: 'present' | 'absent' | 'late' | 'excused';
+	verified_at: string | null;
+	ip_address: string | null;
+	asn: number | null;
+	user_agent: string | null;
+}
+
+export interface UserSessionRow {
+	id: string;
+	user_id: string;
+	expires_at: string;
+	created_at: string;
+}
+
+// --- Derived Types ---
+
+export type User = Omit<UserRow, 'created_at' | 'password_hash'>;
+
+export type Class = ClassRow & { attendance_rate?: number };
+
+export type Student = Pick<UserRow, 'id' | 'first_name' | 'last_name' | 'email'> & {
+	enrolled_at?: string;
+};
+
+/** Joined roster view for faculty session attendance UI */
+export interface AttendanceRecord {
+	student_id: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	status: AttendanceRecordRow['status'];
+	verified_at: string | null;
+	ip_address: string | null;
+	user_agent: string | null;
+}
+
+export interface AttendanceCount {
+	present: number;
+	total: number;
 }
 
 // --- Shared Validation Schemas ---

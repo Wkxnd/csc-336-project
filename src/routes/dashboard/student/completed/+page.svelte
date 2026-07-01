@@ -21,7 +21,7 @@
 <div class="flex-1 relative flex items-center justify-center min-h-[70vh]">
 	<!-- Ambient Background Orb -->
 	<div
-		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-gradient-sky rounded-full blur-[100px] opacity-35 mix-blend-multiply pointer-events-none"
+		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-200 max-h-200 bg-gradient-sky rounded-full blur-[100px] opacity-35 mix-blend-multiply pointer-events-none"
 	></div>
 
 	{#if detailsQuery?.loading && !details}

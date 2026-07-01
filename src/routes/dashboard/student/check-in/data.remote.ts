@@ -1,6 +1,7 @@
 import { query, command, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
 import { createHmac } from 'crypto';
+import { requireRole } from '$lib/server/session';
 import { uuidSchema, verifyQrCheckInSchema } from '$lib/types';
 
 function getQrToken(secret: string, offset: number = 0): string {
@@ -9,12 +10,10 @@ function getQrToken(secret: string, offset: number = 0): string {
 }
 
 export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId, token }) => {
-	const { locals, request } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'student') {
-		throw new Error('Unauthorized');
-	}
+	const { cookies, request } = getRequestEvent();
+	const user = await requireRole(cookies, 'student');
 
-	const [session] = await sql<{ qr_secret: string; attendance_expires_at: string | null }[]>`
+	const [session] = await sql<{ qr_secret: string | null; attendance_expires_at: string | null }[]>`
 		SELECT qr_secret, attendance_expires_at
 		FROM class_sessions
 		WHERE id = ${sessionId}
@@ -26,6 +25,10 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 
 	if (session.attendance_expires_at && new Date(session.attendance_expires_at) < new Date()) {
 		throw new Error('Attendance session has closed');
+	}
+
+	if (!session.qr_secret) {
+		throw new Error('QR code not available for this session');
 	}
 
 	const expectedCurrent = getQrToken(session.qr_secret, 0);
@@ -40,7 +43,7 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 
 	await sql`
 		INSERT INTO attendance_records (session_id, student_id, status, verified_at, ip_address, user_agent)
-		VALUES (${sessionId}, ${locals.user.id}, 'present', NOW(), ${ip}, ${userAgent})
+		VALUES (${sessionId}, ${user.id}, 'present', NOW(), ${ip}, ${userAgent})
 		ON CONFLICT (session_id, student_id)
 		DO UPDATE SET status = 'present', verified_at = NOW(), ip_address = ${ip}, user_agent = ${userAgent}
 	`;
@@ -50,8 +53,8 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 });
 
 export const getStudentLatestCheckInDetails = query(uuidSchema, async (sessionId) => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'student') return null;
+	const { cookies } = getRequestEvent();
+	const user = await requireRole(cookies, 'student');
 
 	const [record] = await sql<
 		{ class_name: string; session_date: string; verified_at: string; status: string }[]
@@ -59,7 +62,7 @@ export const getStudentLatestCheckInDetails = query(uuidSchema, async (sessionId
 		SELECT c.name as class_name, cs.session_date, ar.verified_at, ar.status
 		FROM class_sessions cs
 		JOIN classes c ON cs.class_id = c.id
-		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = ${locals.user.id}
+		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = ${user.id}
 		WHERE cs.id = ${sessionId}
 	`;
 	return record || null;

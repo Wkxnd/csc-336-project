@@ -15,7 +15,7 @@ test.describe('AttendLink Attendance E2E Journey', () => {
 		page.on('pageerror', (err) => console.error('FACULTY PAGE ERROR:', err.message));
 
 		// 1. REGISTER FACULTY
-		await page.goto('/');
+		await page.goto('/auth');
 		await page.click('text=Register');
 
 		await page.fill('#firstName', 'Professor');
@@ -83,7 +83,7 @@ test.describe('AttendLink Attendance E2E Journey', () => {
 		studentPage.on('console', (msg) => console.log('STUDENT PAGE LOG:', msg.text()));
 		studentPage.on('pageerror', (err) => console.error('STUDENT PAGE ERROR:', err.message));
 
-		await studentPage.goto('/');
+		await studentPage.goto('/auth');
 		await studentPage.click('text=Register');
 
 		await studentPage.fill('#firstName', 'Alice');

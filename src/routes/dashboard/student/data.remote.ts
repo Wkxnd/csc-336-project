@@ -1,28 +1,25 @@
-import { query, form, getRequestEvent } from '$app/server';
+import { query, form } from '$app/server';
 import { sql } from '$lib/server/db';
 import { invalid } from '@sveltejs/kit';
+import { getStudent } from '$lib/auth.remote';
 import { enrollInClassSchema, type Class } from '$lib/types';
 
-export const getClasses = query(async (): Promise<Class[]> => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'student') return [];
+export const getClasses = query(async () => {
+	const user = await getStudent();
 
 	return await sql<Class[]>`
 		SELECT c.*,
 			(SELECT attendance_rate FROM class_attendance_summary
-			 WHERE class_id = c.id AND student_id = ${locals.user.id}) as attendance_rate
+			 WHERE class_id = c.id AND student_id = ${user.id}) as attendance_rate
 		FROM enrollments e
 		JOIN classes c ON e.class_id = c.id
-		WHERE e.student_id = ${locals.user.id}
+		WHERE e.student_id = ${user.id}
 		ORDER BY e.enrolled_at DESC
 	`;
 });
 
 export const enrollInClass = form(enrollInClassSchema, async ({ classCode }, issue) => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'student') {
-		throw new Error('Unauthorized');
-	}
+	const user = await getStudent();
 
 	const [targetClass] = await sql<
 		{ id: string }[]
@@ -33,7 +30,7 @@ export const enrollInClass = form(enrollInClassSchema, async ({ classCode }, iss
 
 	const [existingEnrollment] = await sql<{ class_id: string }[]>`
 		SELECT class_id FROM enrollments
-		WHERE class_id = ${targetClass.id} AND student_id = ${locals.user.id}
+		WHERE class_id = ${targetClass.id} AND student_id = ${user.id}
 	`;
 
 	if (existingEnrollment) {
@@ -42,7 +39,7 @@ export const enrollInClass = form(enrollInClassSchema, async ({ classCode }, iss
 
 	await sql`
 		INSERT INTO enrollments (class_id, student_id)
-		VALUES (${targetClass.id}, ${locals.user.id})
+		VALUES (${targetClass.id}, ${user.id})
 	`;
 
 	const sessions = await sql<{ id: string }[]>`
@@ -51,7 +48,7 @@ export const enrollInClass = form(enrollInClassSchema, async ({ classCode }, iss
 	for (const s of sessions) {
 		await sql`
 			INSERT INTO attendance_records (session_id, student_id, status)
-			VALUES (${s.id}, ${locals.user.id}, 'absent')
+			VALUES (${s.id}, ${user.id}, 'absent')
 			ON CONFLICT DO NOTHING
 		`;
 	}

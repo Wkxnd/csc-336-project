@@ -1,24 +1,21 @@
-import { query, form, getRequestEvent } from '$app/server';
+import { query, form } from '$app/server';
 import { sql } from '$lib/server/db';
 import { invalid } from '@sveltejs/kit';
 import { createClassSchema, type Class } from '$lib/types';
+import { getFaculty } from '$lib/auth.remote';
 
-export const getClasses = query(async (): Promise<Class[]> => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'faculty') return [];
+export const getClasses = query(async () => {
+	const user = await getFaculty();
 
 	return await sql<Class[]>`
 		SELECT * FROM classes
-		WHERE faculty_id = ${locals.user.id}
+		WHERE faculty_id = ${user.id}
 		ORDER BY created_at DESC
 	`;
 });
 
 export const createClass = form(createClassSchema, async ({ name, code, description }, issue) => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'faculty') {
-		throw new Error('Unauthorized');
-	}
+	const user = await getFaculty();
 
 	const [existingClass] = await sql<{ id: string }[]>`SELECT id FROM classes WHERE code = ${code}`;
 	if (existingClass) {
@@ -27,7 +24,7 @@ export const createClass = form(createClassSchema, async ({ name, code, descript
 
 	await sql`
 		INSERT INTO classes (faculty_id, name, code, description)
-		VALUES (${locals.user.id}, ${name}, ${code}, ${description})
+		VALUES (${user.id}, ${name}, ${code}, ${description})
 	`;
 
 	void getClasses().refresh();

@@ -36,6 +36,9 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(typescript@6.0.3)
     devDependencies:
+      '@castlenine/svelte-qrcode':
+        specifier: ^2.3.0
+        version: 2.3.0(svelte@5.56.4(@typescript-eslint/types@8.62.1))
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.6.0(jiti@1.21.7))
@@ -163,6 +166,11 @@ packages:
 
   '@blazediff/core@1.9.1':
     resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
+
+  '@castlenine/svelte-qrcode@2.3.0':
+    resolution: {integrity: sha512-1YO6tL63gjbCuBkhd/PyMMFbjFD6gO6TJjvq5Ucfs5+0s13oDfiUyxO15kjR11enG7O/A2R0WBuc4bfdMqjTJQ==}
+    peerDependencies:
+      svelte: '>=3.54.0'
 
   '@dagrejs/dagre@1.1.8':
     resolution: {integrity: sha512-5SEDlndt4W/LaVzPYJW+bSmSEZc9EzTf8rJ20WCKvjS5EAZAN0b+x0Yww7VMT4R3Wootkg+X9bUfUxazYw6Blw==}
@@ -2254,6 +2262,10 @@ snapshots:
   '@alloc/quick-lru@5.2.0': {}
 
   '@blazediff/core@1.9.1': {}
+
+  '@castlenine/svelte-qrcode@2.3.0(svelte@5.56.4(@typescript-eslint/types@8.62.1))':
+    dependencies:
+      svelte: 5.56.4(@typescript-eslint/types@8.62.1)
 
   '@dagrejs/dagre@1.1.8':
     dependencies:

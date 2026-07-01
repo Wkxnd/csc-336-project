@@ -1,6 +1,7 @@
-import { query, form, getRequestEvent } from '$app/server';
+import { query, form } from '$app/server';
 import { sql } from '$lib/server/db';
 import { randomBytes } from 'crypto';
+import { getFaculty } from '$lib/auth.remote';
 import {
 	createSessionSchema,
 	uuidSchema,
@@ -9,20 +10,20 @@ import {
 	type Student
 } from '$lib/types';
 
-export const getClass = query(uuidSchema, async (classId): Promise<Class | null> => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'faculty') return null;
+export const getClass = query(uuidSchema, async (classId) => {
+	const user = await getFaculty();
 
 	const [row] = await sql<Class[]>`
 		SELECT * FROM classes
-		WHERE id = ${classId} AND faculty_id = ${locals.user.id}
+		WHERE id = ${classId} AND faculty_id = ${user.id}
 	`;
+	// TODO: use error boundaries and throw 404 if row is null
 	return row ?? null;
 });
 
-export const getSessions = query(uuidSchema, async (classId): Promise<ClassSession[]> => {
-	const { locals } = getRequestEvent();
-	if (!locals.user) return [];
+export const getSessions = query(uuidSchema, async (classId) => {
+	// TODO: scope classes to faculty
+	await getFaculty();
 
 	return await sql<ClassSession[]>`
 		SELECT * FROM class_sessions
@@ -32,10 +33,8 @@ export const getSessions = query(uuidSchema, async (classId): Promise<ClassSessi
 });
 
 export const createSession = form(createSessionSchema, async ({ classId, sessionDate }) => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'faculty') {
-		throw new Error('Unauthorized');
-	}
+	// const user =
+	await getFaculty();
 
 	const qrSecret = randomBytes(16).toString('hex');
 	const [session] = await sql<ClassSession[]>`
@@ -58,9 +57,9 @@ export const createSession = form(createSessionSchema, async ({ classId, session
 	void getSessions(classId).refresh();
 });
 
-export const getClassRoster = query(uuidSchema, async (classId): Promise<Student[]> => {
-	const { locals } = getRequestEvent();
-	if (!locals.user || locals.user.role !== 'faculty') return [];
+export const getClassRoster = query(uuidSchema, async (classId) => {
+	// const user =
+	await getFaculty();
 
 	return await sql<Student[]>`
 		SELECT u.id, u.first_name, u.last_name, u.email, e.enrolled_at
