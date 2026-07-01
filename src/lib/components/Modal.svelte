@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { X } from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
 
 	interface Props {
@@ -52,16 +53,7 @@
 					class="text-muted hover:text-ink w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container transition-colors cursor-pointer"
 					aria-label="Close modal"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						class="w-5 h-5"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-					</svg>
+					<X class="w-5 h-5" strokeWidth={1.5} />
 				</button>
 			</div>
 

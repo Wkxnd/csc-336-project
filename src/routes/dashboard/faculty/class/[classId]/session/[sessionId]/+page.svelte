@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { QrCode } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { dev } from '$app/environment';
 	import { onDestroy } from 'svelte';
@@ -225,20 +226,7 @@
 			<div
 				class="flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="w-16 h-16 text-muted-soft mb-base"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5ZM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z"
-					/>
-				</svg>
+				<QrCode class="w-16 h-16 text-muted-soft mb-base" strokeWidth={1.5} />
 				<h3 class="font-title-md text-ink text-[18px]">Attendance Not Active</h3>
 				<p class="text-muted text-[14px] mt-sm max-w-80">
 					Start an attendance session above to display the dynamic check-in QR code.

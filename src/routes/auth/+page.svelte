@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BadgeCheck, TriangleAlert } from '@lucide/svelte';
 	import { login, register } from '$lib/auth.remote';
 	import Input from '$lib/components/Input.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -24,20 +25,7 @@
 
 	<main class="relative z-10 w-full max-w-112 flex flex-col items-center text-center fade-in-up">
 		<div class="flex items-center gap-sm mb-lg">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-				class="w-8 h-8 text-ink"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"
-				/>
-			</svg>
+			<BadgeCheck class="w-8 h-8 text-ink" strokeWidth={1.5} />
 			<h1 class="font-display-md text-[28px] text-ink tracking-tight font-normal">AttendLink</h1>
 		</div>
 
@@ -57,18 +45,7 @@
 				<div
 					class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="currentColor"
-						class="w-5 h-5 shrink-0"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
+					<TriangleAlert class="w-5 h-5 shrink-0" fill="currentColor" />
 					{login.fields?.allIssues()?.[0]?.message}
 				</div>
 			{/if}
@@ -77,18 +54,7 @@
 				<div
 					class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="currentColor"
-						class="w-5 h-5 shrink-0"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
+					<TriangleAlert class="w-5 h-5 shrink-0" fill="currentColor" />
 					{register.fields?.allIssues()?.[0]?.message}
 				</div>
 			{/if}

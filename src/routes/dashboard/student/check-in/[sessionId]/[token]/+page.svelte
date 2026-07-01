@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ArrowRight, Check, CircleAlert } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { verifyQrCheckIn } from './data.remote';
@@ -26,16 +27,7 @@
 			<div
 				class="fade-in-up w-20 h-20 mb-lg rounded-full border border-hairline bg-surface-container-lowest flex items-center justify-center shadow-sm"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="w-8 h-8 text-ink"
-				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-				</svg>
+				<Check class="w-8 h-8 text-ink" strokeWidth={1.5} />
 			</div>
 
 			<!-- Heading -->
@@ -88,20 +80,7 @@
 				onclick={() => goto(resolve('/dashboard/student'))}
 			>
 				View My History
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="w-4 h-4"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-					/>
-				</svg>
+				<ArrowRight class="w-4 h-4" strokeWidth={1.5} />
 			</Button>
 
 			{#snippet pending()}
@@ -127,20 +106,7 @@
 						<div
 							class="w-20 h-20 mb-lg rounded-full border border-semantic-error/20 bg-semantic-error/5 flex items-center justify-center"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="1.5"
-								stroke="currentColor"
-								class="w-10 h-10 text-semantic-error"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-								/>
-							</svg>
+							<CircleAlert class="w-10 h-10 text-semantic-error" strokeWidth={1.5} />
 						</div>
 
 						<h2 class="font-display-md text-[26px] text-ink tracking-tight font-normal">

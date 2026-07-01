@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BookOpen } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { getClasses, createClass } from './data.remote';
 	import Card from '$lib/components/Card.svelte';
@@ -24,20 +25,7 @@
 		<div
 			class="flex-1 flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-				class="w-12 h-12 text-muted-soft mb-sm"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
-				/>
-			</svg>
+			<BookOpen class="w-12 h-12 text-muted-soft mb-sm" strokeWidth={1.5} />
 			<h3 class="font-title-md text-ink text-[18px]">No Classes Yet</h3>
 			<p class="text-muted text-[14px] mt-1">Create your first class to get started.</p>
 		</div>
