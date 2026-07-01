@@ -47,6 +47,8 @@
 		"vitest-browser-svelte": "^2.2.0"
 	},
 	"dependencies": {
+		"@ai-sdk/google-vertex": "^5.0.4",
+		"@ai-sdk/svelte": "^5.0.8",
 		"@fontsource/inter": "^5.2.8",
 		"@fontsource/newsreader": "^5.2.10",
 		"@lucide/svelte": "^1.22.0",

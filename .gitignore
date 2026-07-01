@@ -18,6 +18,10 @@ Thumbs.db
 !.env.example
 !.env.test
 
+# GCP service account credentials
+*-service-account.json
+vertex-service-account.json
+
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
@@ -26,3 +30,4 @@ test-results
 
 mise.local.toml
 stitch/
+gcp_sa.json
