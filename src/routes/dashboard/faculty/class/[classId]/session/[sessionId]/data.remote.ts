@@ -10,9 +10,20 @@ import {
 } from '$lib/types';
 import { getFaculty } from '$lib/auth.remote';
 
-function getQrToken(secret: string, offset: number = 0): string {
-	const timeWindow = Math.floor(Date.now() / 15000) + offset;
+const QR_TOKEN_WINDOW_MS = 15_000;
+
+function getQrToken(secret: string, offset: number = 0, now = Date.now()): string {
+	const timeWindow = Math.floor(now / QR_TOKEN_WINDOW_MS) + offset;
 	return createHmac('sha256', secret).update(timeWindow.toString()).digest('hex');
+}
+
+function sleep(ms: number) {
+	return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function getNextQrWindowDelay(now = Date.now()) {
+	const nextWindow = (Math.floor(now / QR_TOKEN_WINDOW_MS) + 1) * QR_TOKEN_WINDOW_MS;
+	return nextWindow - now;
 }
 
 // TODO: wouldn't this only be null if there was an error? maybe we should throw an error instead of returning null
@@ -40,7 +51,7 @@ export const startAttendance = command(
 
 		void getSession(sessionId).set(session);
 		// void getSessions(session.class_id).refresh();
-		void getRotatingQrToken(sessionId).refresh();
+		void getLiveRotatingQrToken(sessionId).reconnect();
 
 		// return { success: true, session };
 	}
@@ -64,28 +75,35 @@ export const stopAttendance = command(uuidSchema, async (sessionId) => {
 	// void getSessions(session.class_id).refresh();
 
 	void getSession(sessionId).set(session);
-	void getRotatingQrToken(sessionId).refresh();
+	void getLiveRotatingQrToken(sessionId).reconnect();
 
 	// return { success: true, session };
 });
 
-export const getRotatingQrToken = query(uuidSchema, async (sessionId) => {
+export const getLiveRotatingQrToken = query.live(uuidSchema, async function* (sessionId) {
 	await getFaculty();
 
-	const [session] = await sql<{ qr_secret: string | null; attendance_expires_at: string | null }[]>`
-		SELECT qr_secret, attendance_expires_at
-		FROM class_sessions
-		WHERE id = ${sessionId}
-	`;
-	// TODO: is the active: true and active: false even needed? because the frontend can just check the session status since it gets refreshed in the remote functions
-	if (
-		!session?.qr_secret ||
-		(session.attendance_expires_at && new Date(session.attendance_expires_at) < new Date())
-	) {
-		return { active: false, token: null };
-	}
+	while (true) {
+		const [session] = await sql<
+			{ qr_secret: string | null; attendance_expires_at: string | null }[]
+		>`
+			SELECT qr_secret, attendance_expires_at
+			FROM class_sessions
+			WHERE id = ${sessionId}
+		`;
+		const expiresAt = session?.attendance_expires_at ?? null;
+		const expiresAtMs = expiresAt ? new Date(expiresAt).getTime() : null;
+		const now = Date.now();
 
-	return { active: true, token: getQrToken(session.qr_secret, 0) };
+		if (!session?.qr_secret || expiresAtMs === null || expiresAtMs <= now) {
+			yield { active: false, token: null, expiresAt };
+			await sleep(QR_TOKEN_WINDOW_MS);
+			continue;
+		}
+
+		yield { active: true, token: getQrToken(session.qr_secret, 0, now), expiresAt };
+		await sleep(Math.min(getNextQrWindowDelay(now), expiresAtMs - now));
+	}
 });
 
 export const getSessionAttendance = query(uuidSchema, async (sessionId) => {

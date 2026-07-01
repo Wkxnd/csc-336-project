@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { QrCode } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import { dev } from '$app/environment';
-	import { onDestroy } from 'svelte';
+	import { browser, dev } from '$app/environment';
 	import QRCode from '@castlenine/svelte-qrcode';
-	import { getSession, startAttendance, stopAttendance, getRotatingQrToken } from './data.remote';
+	import {
+		getSession,
+		startAttendance,
+		stopAttendance,
+		getLiveRotatingQrToken
+	} from './data.remote';
 	import { getClass } from '../../data.remote';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -17,107 +21,27 @@
 	const { classId, sessionId } = $derived(params);
 
 	const classData = $derived(getClass(classId));
-	const session = $derived(await getSession(sessionId));
+	const session = $derived(getSession(sessionId));
+	const liveQrToken = $derived(getLiveRotatingQrToken(sessionId));
+	const liveQr = $derived(await liveQrToken);
 
-	const isAttendanceActive = $derived(
-		session?.attendance_expires_at !== null &&
-			session?.attendance_expires_at !== undefined &&
-			new Date(session.attendance_expires_at) > new Date()
-	);
+	const isAttendanceActive = $derived(liveQr.active);
 
-	// QR rotation
-	let qrToken = $state<string | null>(null);
-	let qrTimeRemaining = $state(15);
 	let durationMinutes = $state(10);
-	let qrInterval = $state<ReturnType<typeof setInterval> | null>(null);
-	let qrTimer = $state<ReturnType<typeof setInterval> | null>(null);
-
-	onDestroy(() => {
-		stopRotators();
-	});
-
-	$effect(() => {
-		if (isAttendanceActive && !qrInterval) {
-			void startQrRotator();
-		} else if (!isAttendanceActive && qrInterval) {
-			stopRotators();
-			qrToken = null;
-		}
-	});
-
-	// TODO: maybe this should be a query.live remote function instead
-	async function rotateToken() {
-		try {
-			const res = await getRotatingQrToken(sessionId);
-			if (res.active) {
-				qrToken = res.token;
-			} else {
-				stopRotators();
-				qrToken = null;
-			}
-		} catch (e) {
-			console.error(e);
-		}
-	}
-
-	function stopRotators() {
-		if (qrInterval != null) clearInterval(qrInterval);
-		if (qrTimer != null) clearInterval(qrTimer);
-		qrInterval = null;
-		qrTimer = null;
-	}
-
-	async function startQrRotator() {
-		stopRotators();
-		await rotateToken();
-
-		qrInterval = setInterval(async () => {
-			await rotateToken();
-		}, 15000);
-
-		qrTimeRemaining = 15;
-		qrTimer = setInterval(() => {
-			qrTimeRemaining -= 1;
-			if (qrTimeRemaining <= 0) {
-				qrTimeRemaining = 15;
-			}
-		}, 1000);
-	}
-
-	// async function handleStartAttendance() {
-	// 	try {
-	// 		const res = await startAttendance({ sessionId, durationMinutes });
-	// 		if (res.success) {
-	// 			session = res.session;
-	// 		}
-	// 	} catch (e) {
-	// 		console.error(e);
-	// 	}
-	// }
-
-	// async function handleStopAttendance() {
-	// 	try {
-	// 		const res = await stopAttendance(sessionId);
-	// 		if (res.success) {
-	// 			session = res.session;
-	// 		}
-	// 	} catch (e) {
-	// 		console.error(e);
-	// 	}
-	// }
 </script>
 
 <div class="flex flex-col gap-lg h-full">
+	{const session_date = new Date((await session).session_date).toLocaleDateString(undefined, {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric'
+	})}
 	<Breadcrumbs
 		crumbs={[
 			{ label: 'Classes', href: '/dashboard/faculty' },
 			{ label: (await classData).code, href: `/dashboard/faculty/class/${classId}` },
 			{
-				label: new Date(session.session_date).toLocaleDateString(undefined, {
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})
+				label: session_date
 			}
 		]}
 	/>
@@ -130,11 +54,7 @@
 					Session
 				</span>
 				<h2 class="font-display-md text-[24px] text-ink font-normal tracking-tight mt-1">
-					{new Date(session.session_date).toLocaleDateString(undefined, {
-						weekday: 'long',
-						month: 'long',
-						day: 'numeric'
-					})}
+					{session_date}
 				</h2>
 			</div>
 
@@ -173,29 +93,19 @@
 
 	<!-- Main Content: QR Code + Counter -->
 	<div class="flex-1 min-h-0 overflow-y-auto">
-		{#if isAttendanceActive && qrToken}
-			{@const checkInUrl = `${window.location.origin}${resolve(`/dashboard/student/check-in/${sessionId}/${qrToken}`)}`}
+		{#if isAttendanceActive && liveQr.token}
+			{@const checkInPath = resolve(`/dashboard/student/check-in/${sessionId}/${liveQr.token}`)}
 			<div class="flex flex-col lg:flex-row gap-lg items-start w-full">
 				<!-- QR Code Column -->
 				<div class="flex flex-col items-center gap-sm flex-1 min-w-0">
-					<div
-						class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
-					>
-						<QRCode data={checkInUrl} />
-					</div>
-
-					<!-- Timer -->
-					<div class="w-full max-w-80 text-center">
-						<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
-							<div
-								class="h-full bg-ink transition-all duration-1000 ease-linear rounded-full"
-								style="width: {(qrTimeRemaining / 15) * 100}%"
-							></div>
+					{#if browser}
+						{@const checkInUrl = `${window.location.origin}${checkInPath}`}
+						<div
+							class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
+						>
+							<QRCode data={checkInUrl} />
 						</div>
-						<span class="text-[11px] text-muted-soft block mt-1">
-							Refreshes in {qrTimeRemaining}s
-						</span>
-					</div>
+					{/if}
 				</div>
 
 				<!-- Stats Column -->
@@ -204,7 +114,8 @@
 					<LiveCount {sessionId} />
 
 					<!-- Dev copy link -->
-					{#if dev}
+					{#if browser && dev}
+						{@const checkInUrl = `${window.location.origin}${checkInPath}`}
 						{let copySuccess = $state(false)}
 						<button
 							onclick={async () => {
