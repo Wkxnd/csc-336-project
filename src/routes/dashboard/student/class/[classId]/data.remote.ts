@@ -1,11 +1,11 @@
-import { query, getRequestEvent } from '$app/server';
+import { query } from '$app/server';
+import { getStudent } from '$lib/auth.remote';
 import { sql } from '$lib/server/db';
-import { requireRole } from '$lib/server/session';
 import { uuidSchema, type Class } from '$lib/types';
 
-export const getClass = query(uuidSchema, async (classId): Promise<Class | null> => {
-	const { cookies } = getRequestEvent();
-	const user = await requireRole(cookies, 'student');
+// TODO: maybe throw error if not found instead of null
+export const getClass = query(uuidSchema, async (classId) => {
+	const user = await getStudent();
 
 	const [row] = await sql<Class[]>`
 		SELECT c.*,
@@ -19,8 +19,7 @@ export const getClass = query(uuidSchema, async (classId): Promise<Class | null>
 });
 
 export const getStudentAttendanceHistory = query(uuidSchema, async (classId) => {
-	const { cookies } = getRequestEvent();
-	const user = await requireRole(cookies, 'student');
+	const user = await getStudent();
 
 	return await sql<
 		{
