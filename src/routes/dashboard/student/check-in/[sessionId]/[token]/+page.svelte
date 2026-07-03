@@ -17,11 +17,7 @@
 	></div>
 
 	<main class="relative z-10 w-full max-w-112 text-center">
-		<svelte:boundary
-			onerror={(e) => {
-				console.log(e);
-			}}
-		>
+		<svelte:boundary>
 			{const details = await verifyQrCheckIn({ sessionId: params.sessionId, token: params.token })}
 
 			<div
@@ -98,7 +94,7 @@
 				</div>
 			{/snippet}
 
-			{#snippet failed(error)}
+			{#snippet failed(error: App.Error, reset)}
 				<!-- Error Card -->
 				<Card class="text-left" gradientOrb={true} orbVariant="rose">
 					<div class="flex flex-col items-center text-center p-md">
@@ -114,8 +110,7 @@
 						</h2>
 						<p class="font-body-md text-body-md text-on-surface-variant my-base max-w-96">
 							<!-- TODO: how to properly type these errors -->
-							{const message = 'message' in error.body ? error.body.message : error}
-							{message}
+							{error.message}
 						</p>
 
 						<div class="flex gap-sm w-full mt-md">
@@ -126,7 +121,7 @@
 							>
 								Dashboard
 							</Button>
-							<Button class="flex-1" onclick={() => window.location.reload()}>Try Again</Button>
+							<Button class="flex-1" onclick={reset}>Try Again</Button>
 						</div>
 					</div>
 				</Card>
