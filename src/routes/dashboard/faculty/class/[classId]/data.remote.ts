@@ -7,8 +7,11 @@ import {
 	uuidSchema,
 	type ClassSession,
 	type Class,
-	type Student
+	type Student,
+	type AttendanceTrendPoint,
+	type StudentAttendanceSummary
 } from '$lib/types';
+import { error } from '@sveltejs/kit';
 
 export const getClass = query(uuidSchema, async (classId) => {
 	const user = await getFaculty();
@@ -17,8 +20,7 @@ export const getClass = query(uuidSchema, async (classId) => {
 		SELECT * FROM classes
 		WHERE id = ${classId} AND faculty_id = ${user.id}
 	`;
-	// TODO: use error boundaries and throw 404 if row is null
-	return row ?? null;
+	return row ?? error(404, 'Class not found');
 });
 
 export const getSessions = query(uuidSchema, async (classId) => {
@@ -67,5 +69,40 @@ export const getClassRoster = query(uuidSchema, async (classId) => {
 		JOIN users u ON e.student_id = u.id
 		WHERE e.class_id = ${classId}
 		ORDER BY u.last_name ASC, u.first_name ASC
+	`;
+});
+
+export const getClassAttendanceTrend = query(uuidSchema, async (classId) => {
+	await getFaculty();
+
+	return await sql<AttendanceTrendPoint[]>`
+		SELECT
+			cs.session_date,
+			COUNT(*) FILTER (WHERE ar.status IN ('present', 'late'))::integer AS present_count,
+			COUNT(*)::integer AS total_count,
+			ROUND(
+				COUNT(*) FILTER (WHERE ar.status IN ('present', 'late'))::numeric
+				/ NULLIF(COUNT(*), 0)::numeric * 100,
+				1
+			) AS attendance_rate
+		FROM class_sessions cs
+		JOIN enrollments e ON e.class_id = cs.class_id
+		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = e.student_id
+		WHERE cs.class_id = ${classId}
+		GROUP BY cs.id, cs.session_date
+		ORDER BY cs.session_date ASC
+	`;
+});
+
+export const getClassStudentSummary = query(uuidSchema, async (classId) => {
+	await getFaculty();
+
+	return await sql<StudentAttendanceSummary[]>`
+		SELECT student_name, student_email, total_sessions,
+			present_count, absent_count, late_count,
+			excused_count, attendance_rate
+		FROM class_attendance_summary
+		WHERE class_id = ${classId}
+		ORDER BY attendance_rate ASC
 	`;
 });

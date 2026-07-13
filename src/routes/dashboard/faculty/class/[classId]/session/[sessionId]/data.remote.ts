@@ -9,6 +9,7 @@ import {
 	type AttendanceRecord
 } from '$lib/types';
 import { getFaculty } from '$lib/auth.remote';
+import { error } from '@sveltejs/kit';
 
 const QR_TOKEN_WINDOW_MS = 15_000;
 
@@ -26,14 +27,14 @@ function getNextQrWindowDelay(now = Date.now()) {
 	return nextWindow - now;
 }
 
-// TODO: wouldn't this only be null if there was an error? maybe we should throw an error instead of returning null
 export const getSession = query(uuidSchema, async (sessionId) => {
 	await getFaculty();
 
 	const [row] = await sql<ClassSessionRow[]>`
 		SELECT * FROM class_sessions WHERE id = ${sessionId}
 	`;
-	return row ?? null;
+
+	return row ?? error(404, 'Session not found');
 });
 
 export const startAttendance = command(
@@ -52,8 +53,6 @@ export const startAttendance = command(
 		void getSession(sessionId).set(session);
 		// void getSessions(session.class_id).refresh();
 		void getLiveRotatingQrToken(sessionId).reconnect();
-
-		// return { success: true, session };
 	}
 );
 
@@ -134,7 +133,6 @@ export const updateAttendanceStatus = command(
 		`;
 
 		void getSessionAttendance(sessionId).refresh();
-		// return { success: true };
 	}
 );
 
@@ -152,4 +150,33 @@ export const getLiveAttendanceCount = query.live(uuidSchema, async function* (se
 		yield { present: Number(result.present_count), total: Number(result.total_count) };
 		await new Promise((f) => setTimeout(f, 3000));
 	}
+});
+
+export const exportSessionCsv = query(uuidSchema, async (sessionId) => {
+	await getFaculty();
+
+const rows = await sql<AttendanceRecord[]>`
+		SELECT u.first_name, u.last_name, u.email,
+			COALESCE(ar.status, 'absent') AS status,
+			ar.verified_at, ar.ip_address, ar.user_agent
+		FROM class_sessions cs
+		JOIN enrollments e ON cs.class_id = e.class_id
+		JOIN users u ON e.student_id = u.id
+		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = u.id
+		WHERE cs.id = ${sessionId}
+		ORDER BY u.last_name ASC, u.first_name ASC
+	`;
+
+	const escape = (v: unknown) => {
+		if (v === null || v === undefined) return '""';
+		const str = v instanceof Date ? v.toISOString() : String(v);
+		return `"${str.replace(/"/g, '""')}"`;
+	};
+	const header = 'First Name,Last Name,Email,Status,Verified At,IP Address,User Agent';
+	const lines = rows.map((r) =>
+		[r.first_name, r.last_name, r.email, r.status, r.verified_at, r.ip_address, r.user_agent]
+			.map(escape)
+			.join(',')
+	);
+	return [header, ...lines].join('\n');
 });

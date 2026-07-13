@@ -3,7 +3,7 @@
 	import { getClass, getStudentAttendanceHistory } from './data.remote';
 	import Card from '$lib/components/Card.svelte';
 	import Badge from '$lib/components/Badge.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
@@ -11,13 +11,18 @@
 
 	const classData = $derived(await getClass(classId));
 	const attendanceHistory = $derived(await getStudentAttendanceHistory(classId));
+
+	$effect(() => {
+		breadcrumbs.set([
+			{ label: 'My Classes', href: '/dashboard/student' },
+			{ label: classData.code }
+		]);
+
+		return () => breadcrumbs.clear();
+	});
 </script>
 
 <div class="flex flex-col gap-lg h-full">
-	<Breadcrumbs
-		crumbs={[{ label: 'My Classes', href: '/dashboard/student' }, { label: classData.name }]}
-	/>
-
 	<Card class="shrink-0" gradientOrb={true} orbVariant="lavender">
 		<div class="flex justify-between items-center">
 			<div>

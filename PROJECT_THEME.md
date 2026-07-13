@@ -14,7 +14,7 @@ Database: PostgreSQL
 Front-End: Sveltekit
 Back-End: Sveltekit
 Deployment: Kubernetes
-Reporting: One-click Excel export and optional analytics dashboards (Power BI or Tableau) (maybe grafana + MCP)
+Reporting: One-click Excel export and optional analytics dashboards (Power BI or Tableau)
 Example Use Case:
 
 Taking attendance without students cheating on checking in

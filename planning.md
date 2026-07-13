@@ -65,18 +65,6 @@ Gaps between the presentation and the current code (this plan covers these):
 - Treat this as fully optional per class: if a class has zero rows in
   `class_network_restrictions`, skip the check entirely (matches "can optionally setup").
 
-### 3.2 Device binding on first scan
-
-- Decide on a device signal: a random device ID generated client-side and stored in
-  `localStorage`/a cookie, sent alongside `verifyQrCheckIn`.
-- On first check-in for a `(session_id, student_id)` pair, store that device ID (needs a new
-  column, e.g. `attendance_records.device_id`, added via editing the existing initial
-  migration file — do not create a new migration for this per project convention).
-- On subsequent scans for the same session/student, compare the device ID; mismatch means
-  someone else is trying to check in using the student's already-used QR scan — reject or
-  flag (`attendance_records.status` could gain a `flagged` path, or simply surface a warning
-  to the professor in the live attendance list).
-
 ### 3.3 Attendance export
 
 - Add a remote `command`/`query` in `session/[sessionId]/data.remote.ts` that generates a

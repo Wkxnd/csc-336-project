@@ -8,17 +8,9 @@
 		Error {page.status}
 	</p>
 	<h1 class="font-display-md text-[24px] text-ink">
-		{#if page.status === 403}
-			Access denied
-		{:else if page.status === 401}
-			Sign in required
-		{:else}
-			Something went wrong
-		{/if}
-	</h1>
-	<p class="text-muted text-[14px] max-w-md">
 		{page.error?.message ?? 'An unexpected error occurred.'}
-	</p>
+	</h1>
+
 	<div class="flex gap-sm mt-sm">
 		{#if page.status === 401 || page.status === 403}
 			<a

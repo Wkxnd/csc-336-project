@@ -6,20 +6,21 @@
 	import Button from '$lib/components/Button.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 
 	const classes = $derived(await getClasses());
 
 	let isEnrollOpen = $state(false);
+
+	$effect(() => {
+		breadcrumbs.set([{ label: 'My Classes' }]);
+		return () => breadcrumbs.clear();
+	});
 </script>
 
 <div class="flex flex-col gap-lg h-full">
 	<div class="flex justify-between items-center shrink-0">
-		<div>
-			<h1 class="font-display-lg text-display-lg text-ink font-normal tracking-tight">
-				My Classes
-			</h1>
-			<p class="text-muted text-[14px]">View your enrolled courses and track attendance.</p>
-		</div>
+		<p class="text-muted text-[14px]">View your enrolled courses and track attendance.</p>
 		<Button onclick={() => (isEnrollOpen = true)}>Enroll in Class</Button>
 	</div>
 

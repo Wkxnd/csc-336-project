@@ -2,6 +2,7 @@
 	import { Chat } from '@ai-sdk/svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 
 	const chat = new Chat({});
 
@@ -27,11 +28,15 @@
 		if (isBusy) return;
 		chat.sendMessage({ text });
 	}
+
+	$effect(() => {
+		breadcrumbs.set([{ label: 'Assistant' }]);
+		return () => breadcrumbs.clear();
+	});
 </script>
 
 <div class="flex flex-col gap-lg h-full">
 	<div class="shrink-0">
-		<h1 class="font-display-lg text-display-lg text-ink font-normal tracking-tight">Assistant</h1>
 		<p class="text-muted text-[14px]">
 			Ask questions about your classes, students, and attendance. Answers use your live class data.
 		</p>

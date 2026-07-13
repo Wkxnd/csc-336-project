@@ -2,8 +2,9 @@ import { query } from '$app/server';
 import { getStudent } from '$lib/auth.remote';
 import { sql } from '$lib/server/db';
 import { uuidSchema, type Class } from '$lib/types';
+import { error } from '@sveltejs/kit';
 
-// TODO: maybe throw error if not found instead of null
+
 export const getClass = query(uuidSchema, async (classId) => {
 	const user = await getStudent();
 
@@ -15,7 +16,7 @@ export const getClass = query(uuidSchema, async (classId) => {
 		JOIN classes c ON e.class_id = c.id
 		WHERE c.id = ${classId} AND e.student_id = ${user.id}
 	`;
-	return row ?? null;
+	return row ?? error(404, 'Class not found');
 });
 
 export const getStudentAttendanceHistory = query(uuidSchema, async (classId) => {

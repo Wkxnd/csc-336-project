@@ -4,4 +4,8 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<title>AttendLink</title>
+</svelte:head>
+
 {@render children()}

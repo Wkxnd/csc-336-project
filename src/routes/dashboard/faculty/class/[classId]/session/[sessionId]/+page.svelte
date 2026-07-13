@@ -1,111 +1,141 @@
 <script lang="ts">
 	import { QrCode } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import { browser, dev } from '$app/environment';
+	import { dev } from '$app/environment';
 	import QRCode from '@castlenine/svelte-qrcode';
 	import {
 		getSession,
 		startAttendance,
 		stopAttendance,
-		getLiveRotatingQrToken
+		getLiveRotatingQrToken,
+		exportSessionCsv
 	} from './data.remote';
 	import { getClass } from '../../data.remote';
-	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import LiveCount from '$lib/components/LiveCount.svelte';
+	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
 
 	const { classId, sessionId } = $derived(params);
 
-	const classData = $derived(getClass(classId));
-	const session = $derived(getSession(sessionId));
+	const session = $derived(await getSession(sessionId));
 	const liveQrToken = $derived(getLiveRotatingQrToken(sessionId));
 	const liveQr = $derived(await liveQrToken);
 
 	const isAttendanceActive = $derived(liveQr.active);
 
 	let durationMinutes = $state(10);
+
+	const classCode = $derived((await getClass(classId)).code);
+
+	const formattedSessionDate = $derived(
+		new Date(session.session_date).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		})
+	);
+
+	$effect(() => {
+		if (session) {
+			breadcrumbs.set([
+				{ label: 'Classes', href: '/dashboard/faculty' },
+				{ label: classCode, href: `/dashboard/faculty/class/${classId}` },
+				{ label: formattedSessionDate }
+			]);
+		}
+		return () => breadcrumbs.clear();
+	});
+
+	async function handleExport() {
+		try {
+			const csvContent = await exportSessionCsv(sessionId);
+			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			const safeDate = formattedSessionDate.replace(/[\s,]+/g, '_');
+			link.setAttribute('download', `session_attendance_${classCode}_${safeDate}.csv`);
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		} catch (err) {
+			console.error('Failed to export CSV:', err);
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-lg h-full">
-	{const session_date = new Date((await session).session_date).toLocaleDateString(undefined, {
-		month: 'short',
-		day: 'numeric',
-		year: 'numeric'
-	})}
-	<Breadcrumbs
-		crumbs={[
-			{ label: 'Classes', href: '/dashboard/faculty' },
-			{ label: (await classData).code, href: `/dashboard/faculty/class/${classId}` },
-			{
-				label: session_date
-			}
-		]}
-	/>
+	<!-- Action Header Bar -->
+	<div
+		class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md shrink-0 mb-sm"
+	>
+		<!-- <div>
+			<p class="text-muted text-[14px]">
+				Manage attendance session settings, display the dynamic check-in QR code, and export
+				attendance records.
+			</p>
+		</div> -->
 
-	<!-- Session Header Card -->
-	<Card class="shrink-0" gradientOrb={isAttendanceActive} orbVariant="mint">
-		<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md">
-			<div>
-				<span class="font-caption-uppercase text-[10px] tracking-wider text-muted uppercase">
-					Session
-				</span>
-				<h2 class="font-display-md text-[24px] text-ink font-normal tracking-tight mt-1">
-					{session_date}
-				</h2>
-			</div>
+		<div class="flex items-center gap-sm shrink-0">
+			<!-- Export CSV Button -->
+			<Button variant="outline" size="sm" onclick={handleExport}>Export CSV</Button>
 
-			<div class="flex items-center gap-sm">
-				{#if isAttendanceActive}
+			<!-- Session controls -->
+			{#if isAttendanceActive}
+				<Button
+					variant="outline"
+					size="sm"
+					class="border-semantic-error text-semantic-error hover:bg-semantic-error/5"
+					onclick={async () => {
+						await stopAttendance(sessionId);
+					}}
+				>
+					Stop Session
+				</Button>
+			{:else}
+				<div class="flex items-center gap-xs">
+					<select
+						bind:value={durationMinutes}
+						class="h-9 px-sm bg-surface-card border border-hairline rounded-full text-xs font-body-md focus:outline-none focus:ring-2 focus:ring-ink/20"
+					>
+						<option value={5}>5 mins</option>
+						<option value={10}>10 mins</option>
+						<option value={15}>15 mins</option>
+						<option value={30}>30 mins</option>
+					</select>
 					<Button
-						variant="outline"
-						class="border-semantic-error text-semantic-error hover:bg-semantic-error/5"
+						size="sm"
 						onclick={async () => {
-							await stopAttendance(sessionId);
+							await startAttendance({ sessionId, durationMinutes });
 						}}
 					>
-						Stop Session
+						Start Attendance
 					</Button>
-				{:else}
-					<div class="flex items-center gap-xs">
-						<select
-							bind:value={durationMinutes}
-							class="h-10 px-sm bg-surface-card border border-hairline rounded-full text-xs font-body-md focus:outline-none focus:ring-2 focus:ring-ink/20"
-						>
-							<option value={5}>5 mins</option>
-							<option value={10}>10 mins</option>
-							<option value={15}>15 mins</option>
-							<option value={30}>30 mins</option>
-						</select>
-						<Button
-							onclick={async () => {
-								await startAttendance({ sessionId, durationMinutes });
-							}}>Start Attendance</Button
-						>
-					</div>
-				{/if}
-			</div>
+				</div>
+			{/if}
 		</div>
-	</Card>
+	</div>
 
 	<!-- Main Content: QR Code + Counter -->
 	<div class="flex-1 min-h-0 overflow-y-auto">
 		{#if isAttendanceActive && liveQr.token}
-			{@const checkInPath = resolve(`/dashboard/student/check-in/${sessionId}/${liveQr.token}`)}
+			{const checkInPath = resolve(`/dashboard/student/check-in/${sessionId}/${liveQr.token}`)}
+
+			{const checkInUrl = `${window.location.origin}${checkInPath}`}
 			<div class="flex flex-col lg:flex-row gap-lg items-start w-full">
 				<!-- QR Code Column -->
 				<div class="flex flex-col items-center gap-sm flex-1 min-w-0">
-					{#if browser}
-						{@const checkInUrl = `${window.location.origin}${checkInPath}`}
-						<div
-							class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
-						>
-							<QRCode data={checkInUrl} />
-						</div>
-					{/if}
+					<!-- {#if browser}
+						{const checkInUrl = `${window.location.origin}${checkInPath}`} -->
+					<div
+						class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
+					>
+						<QRCode data={checkInUrl} />
+					</div>
+					<!-- {/if} -->
 				</div>
 
 				<!-- Stats Column -->
@@ -114,8 +144,8 @@
 					<LiveCount {sessionId} />
 
 					<!-- Dev copy link -->
-					{#if browser && dev}
-						{@const checkInUrl = `${window.location.origin}${checkInPath}`}
+					{#if dev}
+						<!-- {const checkInUrl = `${window.location.origin}${checkInPath}`} -->
 						{let copySuccess = $state(false)}
 						<button
 							onclick={async () => {

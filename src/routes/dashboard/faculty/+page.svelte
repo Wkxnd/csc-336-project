@@ -6,59 +6,70 @@
 	import Button from '$lib/components/Button.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 
 	const classes = $derived(await getClasses());
 
 	let isCreateClassOpen = $state(false);
+
+	$effect(() => {
+		breadcrumbs.set([{ label: 'Classes' }]);
+		return () => breadcrumbs.clear();
+	});
 </script>
 
 <div class="flex flex-col gap-lg h-full">
-	<div class="flex justify-between items-center shrink-0">
-		<div>
-			<h1 class="font-display-lg text-display-lg text-ink font-normal tracking-tight">Classes</h1>
-			<p class="text-muted text-[14px]">Manage your courses, view students, and take attendance.</p>
-		</div>
-		<Button onclick={() => (isCreateClassOpen = true)}>Create Class</Button>
-	</div>
-
-	{#if classes.length === 0}
-		<div
-			class="flex-1 flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base">
+		<button
+			onclick={() => (isCreateClassOpen = true)}
+			class="w-full block group text-left focus:outline-none h-full cursor-pointer"
 		>
-			<BookOpen class="w-12 h-12 text-muted-soft mb-sm" strokeWidth={1.5} />
-			<h3 class="font-title-md text-ink text-[18px]">No Classes Yet</h3>
-			<p class="text-muted text-[14px] mt-1">Create your first class to get started.</p>
-		</div>
-	{:else}
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base">
-			{#each classes as c (c.id)}
-				<a
-					href={resolve(`/dashboard/faculty/class/${c.id}`)}
-					class="block group focus:outline-none"
-				>
-					<Card
-						class="h-full border border-hairline hover:border-ink/20 hover:shadow-md transition-all duration-200 group-focus:ring-2 group-focus:ring-ink/20"
-						gradientOrb={true}
-						orbVariant="sky"
+			<Card
+				class="h-full border border-dashed border-hairline hover:border-ink/20 hover:shadow-md transition-all duration-200 group-focus:ring-2 group-focus:ring-ink/20 flex flex-col justify-center"
+			>
+				<div class="flex items-center gap-sm">
+					<BookOpen
+						class="w-5 h-5 text-muted-soft group-hover:text-ink transition-colors"
+						strokeWidth={1.5}
+					/>
+					<span
+						class="font-title-md text-[18px] text-muted group-hover:text-ink transition-colors font-semibold"
 					>
-						<span
-							class="font-caption-uppercase text-[10px] tracking-wider text-muted uppercase block mb-1"
-						>
-							{c.code}
-						</span>
-						<h3 class="font-title-md text-[18px] text-ink font-semibold truncate">
-							{c.name}
-						</h3>
-						{#if c.description}
-							<p class="text-sm text-on-surface-variant mt-sm leading-relaxed line-clamp-2">
-								{c.description}
-							</p>
-						{/if}
-					</Card>
-				</a>
-			{/each}
-		</div>
-	{/if}
+						New Class
+					</span>
+				</div>
+				{#if classes.length === 0}
+					<p class="text-[12px] text-muted-soft mt-sm font-body">
+						Create your first class to get started.
+					</p>
+				{/if}
+			</Card>
+		</button>
+
+		{#each classes as c (c.id)}
+			<a href={resolve(`/dashboard/faculty/class/${c.id}`)} class="block group focus:outline-none">
+				<Card
+					class="h-full border border-hairline hover:border-ink/20 hover:shadow-md transition-all duration-200 group-focus:ring-2 group-focus:ring-ink/20"
+					gradientOrb={true}
+					orbVariant="sky"
+				>
+					<span
+						class="font-caption-uppercase text-[10px] tracking-wider text-muted uppercase block mb-1"
+					>
+						{c.code}
+					</span>
+					<h3 class="font-title-md text-[18px] text-ink font-semibold truncate">
+						{c.name}
+					</h3>
+					{#if c.description}
+						<p class="text-sm text-on-surface-variant mt-sm leading-relaxed line-clamp-2">
+							{c.description}
+						</p>
+					{/if}
+				</Card>
+			</a>
+		{/each}
+	</div>
 </div>
 
 <Modal bind:isOpen={isCreateClassOpen} title="Create New Class">

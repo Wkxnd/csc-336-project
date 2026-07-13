@@ -59,6 +59,8 @@ export type User = Omit<UserRow, 'created_at' | 'password_hash'>;
 
 export type Class = ClassRow & { attendance_rate?: number };
 
+export type ClassSession = ClassSessionRow;
+
 export type Student = Pick<UserRow, 'id' | 'first_name' | 'last_name' | 'email'> & {
 	enrolled_at?: string;
 };
@@ -78,6 +80,24 @@ export interface AttendanceRecord {
 export interface AttendanceCount {
 	present: number;
 	total: number;
+}
+
+export interface AttendanceTrendPoint {
+	session_date: string;
+	present_count: number;
+	total_count: number;
+	attendance_rate: number;
+}
+
+export interface StudentAttendanceSummary {
+	student_name: string;
+	student_email: string;
+	total_sessions: number;
+	present_count: number;
+	absent_count: number;
+	late_count: number;
+	excused_count: number;
+	attendance_rate: number;
 }
 
 // --- Shared Validation Schemas ---
