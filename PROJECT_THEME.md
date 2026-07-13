@@ -14,13 +14,15 @@ Database: PostgreSQL
 Front-End: Sveltekit
 Back-End: Sveltekit
 Deployment: Kubernetes
-Reporting: One-click Excel export and optional analytics dashboards (Power BI or Tableau)
+Reporting: One-click Excel export and optional analytics dashboards (Power BI or Tableau) (it can be built into the site for extra credit but it has to be dynamic dashboards and not static)
 Example Use Case:
 
 Taking attendance without students cheating on checking in
 
 Revenue Model:
 The platform developer earns income through service fees on each booking, targeted ads, or by selling anonymized usage data (e.g., demand trends by location or service type), or membership
+
+**We need to have a revenue reporting dashboard with CSV export and reporting dashboards and stuff**.
 
 Must add 2 store procs
 
