@@ -35,7 +35,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-lg h-full">
+<div class="flex flex-col gap-6 h-full">
 	<div class="shrink-0">
 		<p class="text-muted text-[14px]">
 			Ask questions about your classes, students, and attendance. Answers use your live class data.
@@ -43,11 +43,11 @@
 	</div>
 
 	<Card class="flex-1 flex flex-col min-h-0" padded={false}>
-		<div class="flex-1 overflow-y-auto p-lg flex flex-col gap-base">
+		<div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
 			{#if chat.messages.length === 0}
-				<div class="flex-1 flex flex-col items-center justify-center text-center gap-base">
+				<div class="flex-1 flex flex-col items-center justify-center text-center gap-4">
 					<h3 class="font-title-md text-ink text-[18px]">How can I help?</h3>
-					<div class="flex flex-col gap-sm items-center">
+					<div class="flex flex-col gap-3 items-center">
 						{#each suggestions as suggestion (suggestion)}
 							<Button variant="outline" size="sm" onclick={() => ask(suggestion)}>
 								{suggestion}
@@ -59,7 +59,7 @@
 				{#each chat.messages as message (message.id)}
 					<div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
 						<div
-							class="max-w-[80%] rounded-xl px-base py-sm text-[14px] leading-relaxed {message.role ===
+							class="max-w-[80%] rounded-xl px-4 py-3 text-[14px] leading-relaxed {message.role ===
 							'user'
 								? 'bg-ink text-surface-container-lowest'
 								: 'bg-surface-container text-ink'}"
@@ -73,7 +73,7 @@
 											Looked up data ({part.type.replace('tool-', '')})
 										</summary>
 										<pre
-											class="mt-1 overflow-x-auto rounded-lg bg-surface-container-lowest p-sm text-[11px]">{JSON.stringify(
+											class="mt-1 overflow-x-auto rounded-lg bg-surface-container-lowest p-3 text-[11px]">{JSON.stringify(
 												part,
 												null,
 												2
@@ -88,7 +88,7 @@
 
 			{#if chat.status === 'submitted'}
 				<div class="flex justify-start">
-					<div class="rounded-xl bg-surface-container px-base py-sm text-[14px] text-muted">
+					<div class="rounded-xl bg-surface-container px-4 py-3 text-[14px] text-muted">
 						Thinking...
 					</div>
 				</div>
@@ -96,14 +96,14 @@
 
 			{#if chat.error}
 				<div
-					class="p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[13px] font-medium"
+					class="p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[13px] font-medium"
 				>
 					Something went wrong. Please try again.
 				</div>
 			{/if}
 		</div>
 
-		<form onsubmit={submit} class="shrink-0 border-t border-hairline p-base flex gap-sm items-end">
+		<form onsubmit={submit} class="shrink-0 border-t border-hairline p-4 flex gap-3 items-end">
 			<textarea
 				bind:value={input}
 				placeholder="Ask about your classes..."
@@ -114,7 +114,7 @@
 						submit(e as unknown as SubmitEvent);
 					}
 				}}
-				class="flex-1 resize-none bg-surface-card border border-hairline rounded-lg px-base py-sm text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/20 transition-all duration-200"
+				class="flex-1 resize-none bg-surface-card border border-hairline rounded-lg px-4 py-3 text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/20 transition-all duration-200"
 			></textarea>
 			<Button type="submit" disabled={isBusy || !input.trim()}>
 				{isBusy ? 'Sending...' : 'Send'}

@@ -11,6 +11,7 @@
 		exportSessionCsv
 	} from './data.remote';
 	import { getClass } from '../../data.remote';
+	import { getMySubscription } from '$lib/billing.remote';
 	import Button from '$lib/components/Button.svelte';
 	import LiveCount from '$lib/components/LiveCount.svelte';
 	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
@@ -23,10 +24,13 @@
 	const session = $derived(await getSession(sessionId));
 	const liveQrToken = $derived(getLiveRotatingQrToken(sessionId));
 	const liveQr = $derived(await liveQrToken);
+	const subscription = $derived(await getMySubscription());
+	const canExport = $derived(subscription.plan === 'premium' || subscription.plan === 'enterprise');
 
 	const isAttendanceActive = $derived(liveQr.active);
 
 	let durationMinutes = $state(10);
+	let exportError = $state<string | null>(null);
 
 	const classCode = $derived((await getClass(classId)).code);
 
@@ -50,6 +54,11 @@
 	});
 
 	async function handleExport() {
+		exportError = null;
+		if (!canExport) {
+			exportError = 'CSV export requires Premium or Enterprise. Upgrade from Billing.';
+			return;
+		}
 		try {
 			const csvContent = await exportSessionCsv(sessionId);
 			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -61,16 +70,18 @@
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
 		} catch (err) {
 			console.error('Failed to export CSV:', err);
+			exportError = err instanceof Error ? err.message : 'Failed to export CSV';
 		}
 	}
 </script>
 
-<div class="flex flex-col gap-lg h-full">
+<div class="flex flex-col gap-6 h-full">
 	<!-- Action Header Bar -->
 	<div
-		class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md shrink-0 mb-sm"
+		class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 shrink-0 mb-3"
 	>
 		<!-- <div>
 			<p class="text-muted text-[14px]">
@@ -79,42 +90,51 @@
 			</p>
 		</div> -->
 
-		<div class="flex items-center gap-sm shrink-0">
-			<!-- Export CSV Button -->
-			<Button variant="outline" size="sm" onclick={handleExport}>Export CSV</Button>
+		<div class="flex flex-col gap-2 shrink-0">
+			<div class="flex items-center gap-3 flex-wrap">
+				{#if canExport}
+					<Button variant="outline" size="sm" onclick={handleExport}>Export CSV</Button>
+				{:else}
+					<a href={resolve('/dashboard/faculty/billing')}>
+						<Button variant="outline" size="sm">Upgrade to export</Button>
+					</a>
+				{/if}
 
-			<!-- Session controls -->
-			{#if isAttendanceActive}
-				<Button
-					variant="outline"
-					size="sm"
-					class="border-semantic-error text-semantic-error hover:bg-semantic-error/5"
-					onclick={async () => {
-						await stopAttendance(sessionId);
-					}}
-				>
-					Stop Session
-				</Button>
-			{:else}
-				<div class="flex items-center gap-xs">
-					<select
-						bind:value={durationMinutes}
-						class="h-9 px-sm bg-surface-card border border-hairline rounded-full text-xs font-body-md focus:outline-none focus:ring-2 focus:ring-ink/20"
-					>
-						<option value={5}>5 mins</option>
-						<option value={10}>10 mins</option>
-						<option value={15}>15 mins</option>
-						<option value={30}>30 mins</option>
-					</select>
+				{#if isAttendanceActive}
 					<Button
+						variant="outline"
 						size="sm"
+						class="border-semantic-error text-semantic-error hover:bg-semantic-error/5"
 						onclick={async () => {
-							await startAttendance({ sessionId, durationMinutes });
+							await stopAttendance(sessionId);
 						}}
 					>
-						Start Attendance
+						Stop Session
 					</Button>
-				</div>
+				{:else}
+					<div class="flex items-center gap-2">
+						<select
+							bind:value={durationMinutes}
+							class="h-9 px-3 bg-surface-card border border-hairline rounded-full text-xs font-body-md focus:outline-none focus:ring-2 focus:ring-ink/20"
+						>
+							<option value={5}>5 mins</option>
+							<option value={10}>10 mins</option>
+							<option value={15}>15 mins</option>
+							<option value={30}>30 mins</option>
+						</select>
+						<Button
+							size="sm"
+							onclick={async () => {
+								await startAttendance({ sessionId, durationMinutes });
+							}}
+						>
+							Start Attendance
+						</Button>
+					</div>
+				{/if}
+			</div>
+			{#if exportError}
+				<p class="text-semantic-error text-[12px]">{exportError}</p>
 			{/if}
 		</div>
 	</div>
@@ -125,13 +145,13 @@
 			{const checkInPath = resolve(`/dashboard/student/check-in/${sessionId}/${liveQr.token}`)}
 
 			{const checkInUrl = `${window.location.origin}${checkInPath}`}
-			<div class="flex flex-col lg:flex-row gap-lg items-start w-full">
+			<div class="flex flex-col lg:flex-row gap-6 items-start w-full">
 				<!-- QR Code Column -->
-				<div class="flex flex-col items-center gap-sm flex-1 min-w-0">
+				<div class="flex flex-col items-center gap-3 flex-1 min-w-0">
 					<!-- {#if browser}
 						{const checkInUrl = `${window.location.origin}${checkInPath}`} -->
 					<div
-						class="w-full max-w-80 aspect-square border border-hairline p-sm rounded-2xl bg-white flex items-center justify-center shadow-sm"
+						class="w-full max-w-80 aspect-square border border-hairline p-3 rounded-2xl bg-white flex items-center justify-center shadow-sm"
 					>
 						<QRCode data={checkInUrl} />
 					</div>
@@ -139,7 +159,7 @@
 				</div>
 
 				<!-- Stats Column -->
-				<div class="flex flex-col gap-base lg:w-70 shrink-0 w-full">
+				<div class="flex flex-col gap-4 lg:w-70 shrink-0 w-full">
 					<!-- Live Attendance Counter -->
 					<LiveCount {sessionId} />
 
@@ -155,7 +175,7 @@
 									copySuccess = false;
 								}, 2000);
 							}}
-							class="text-[12px] font-body-strong text-ink hover:underline border border-hairline px-base py-xs rounded-full bg-surface-card hover:bg-surface-container transition-colors cursor-pointer"
+							class="text-[12px] font-body-strong text-ink hover:underline border border-hairline px-4 py-2 rounded-full bg-surface-card hover:bg-surface-container transition-colors cursor-pointer"
 						>
 							{copySuccess ? 'Copied Link!' : 'Copy Check-in Link'}
 						</button>
@@ -165,11 +185,11 @@
 		{:else}
 			<!-- Inactive State -->
 			<div
-				class="flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
+				class="flex flex-col items-center justify-center text-center p-8 border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 			>
-				<QrCode class="w-16 h-16 text-muted-soft mb-base" strokeWidth={1.5} />
+				<QrCode class="w-16 h-16 text-muted-soft mb-4" strokeWidth={1.5} />
 				<h3 class="font-title-md text-ink text-[18px]">Attendance Not Active</h3>
-				<p class="text-muted text-[14px] mt-sm max-w-80">
+				<p class="text-muted text-[14px] mt-3 max-w-80">
 					Start an attendance session above to display the dynamic check-in QR code.
 				</p>
 

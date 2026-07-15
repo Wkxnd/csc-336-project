@@ -33,16 +33,30 @@ try {
 	console.log(`${colors.yellow}Seeding database with test data...${colors.reset}`);
 
 	// Clear existing records to ensure fresh state and avoid unique constraints / uuid conflicts
-	await sql`TRUNCATE TABLE users, classes, enrollments, class_sessions, attendance_records, user_sessions CASCADE;`;
+	await sql`TRUNCATE TABLE users, classes, enrollments, class_sessions, attendance_records, user_sessions, subscriptions, payments, class_network_restrictions CASCADE;`;
 	console.log(`${colors.green}Cleaned up existing database tables.${colors.reset}`);
 
 	// --- 1. USERS ---
 	const commonPasswordHash = hashPassword('Password123');
 
-	// Faculty Newton
+	// Faculty Newton (premium — has multiple demo classes)
 	const [faculty] = await sql`
 		INSERT INTO users (email, password_hash, first_name, last_name, role)
 		VALUES ('prof@university.edu', ${commonPasswordHash}, 'Professor', 'Newton', 'faculty')
+		RETURNING id
+	`;
+
+	// Faculty Curie (free — one class limit)
+	const [facultyFree] = await sql`
+		INSERT INTO users (email, password_hash, first_name, last_name, role)
+		VALUES ('free@university.edu', ${commonPasswordHash}, 'Marie', 'Curie', 'faculty')
+		RETURNING id
+	`;
+
+	// Faculty Tesla (enterprise — ASN restrictions)
+	const [facultyEnterprise] = await sql`
+		INSERT INTO users (email, password_hash, first_name, last_name, role)
+		VALUES ('enterprise@university.edu', ${commonPasswordHash}, 'Nikola', 'Tesla', 'faculty')
 		RETURNING id
 	`;
 
@@ -61,9 +75,21 @@ try {
 	`;
 
 	console.log(`${colors.green}Created users:${colors.reset}`);
-	console.log(`  - Faculty: prof@university.edu / Password123`);
+	console.log(`  - Faculty (premium): prof@university.edu / Password123`);
+	console.log(`  - Faculty (free): free@university.edu / Password123`);
+	console.log(`  - Faculty (enterprise): enterprise@university.edu / Password123`);
 	console.log(`  - Student Alice: student@university.edu / Password123`);
 	console.log(`  - Student Bob: bob@university.edu / Password123`);
+
+	// --- 1b. SUBSCRIPTIONS ---
+	await sql`
+		INSERT INTO subscriptions (user_id, plan, status)
+		VALUES
+			(${faculty.id}, 'premium', 'active'),
+			(${facultyFree.id}, 'free', 'active'),
+			(${facultyEnterprise.id}, 'enterprise', 'active')
+	`;
+	console.log(`${colors.green}Created faculty subscriptions.${colors.reset}`);
 
 	// --- 2. CLASSES ---
 	const [cs101] = await sql`
@@ -152,6 +178,26 @@ try {
 	`;
 
 	console.log(`${colors.green}Created sessions and attendance logs successfully.${colors.reset}`);
+
+	// --- 5. SAMPLE PAYMENTS (admin revenue dashboard) ---
+	const monthsAgo = (n) => new Date(Date.now() - n * 30 * 24 * 60 * 60 * 1000).toISOString();
+
+	await sql`
+		INSERT INTO payments (user_id, amount, currency, source, description, created_at)
+		VALUES
+			(${faculty.id}, 29.99, 'USD', 'subscription', 'Premium plan subscription', ${monthsAgo(0)}),
+			(${faculty.id}, 29.99, 'USD', 'subscription', 'Premium plan subscription', ${monthsAgo(1)}),
+			(${faculty.id}, 29.99, 'USD', 'subscription', 'Premium plan subscription', ${monthsAgo(2)}),
+			(${facultyEnterprise.id}, 99.00, 'USD', 'subscription', 'Enterprise plan subscription', ${monthsAgo(0)}),
+			(${facultyEnterprise.id}, 99.00, 'USD', 'subscription', 'Enterprise plan subscription', ${monthsAgo(1)}),
+			(${faculty.id}, 4.50, 'USD', 'service_fee', 'Per-session processing fee', ${monthsAgo(0)}),
+			(${facultyEnterprise.id}, 12.00, 'USD', 'service_fee', 'Per-session processing fee', ${monthsAgo(1)}),
+			(NULL, 85.00, 'USD', 'ads', 'Campus partner display ads', ${monthsAgo(0)}),
+			(NULL, 60.00, 'USD', 'ads', 'Campus partner display ads', ${monthsAgo(2)}),
+			(NULL, 150.00, 'USD', 'data_sale', 'Anonymized attendance trend pack', ${monthsAgo(1)})
+	`;
+	console.log(`${colors.green}Seeded sample payments for revenue dashboard.${colors.reset}`);
+
 	console.log(`${colors.cyan}Database seeding complete!${colors.reset}`);
 } catch (error) {
 	console.error(`${colors.red}Database seeding failed:${colors.reset}`);

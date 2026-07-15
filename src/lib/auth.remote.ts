@@ -119,6 +119,13 @@ export const register = form(
 			RETURNING id, role
 		`;
 
+		if (user.role === 'faculty') {
+			await sql`
+				INSERT INTO subscriptions (user_id, plan, status)
+				VALUES (${user.id}, 'free', 'active')
+			`;
+		}
+
 		await createUserSession(cookies, user.id);
 		redirect(303, postLoginRedirect(url, user.role));
 	}

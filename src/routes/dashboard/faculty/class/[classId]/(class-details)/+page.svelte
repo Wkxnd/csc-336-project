@@ -15,8 +15,8 @@
 	let newSessionDate = $state(new Date().toISOString().slice(0, 10));
 </script>
 
-<div class="flex-1 flex flex-col min-h-0 pt-base">
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base overflow-y-auto pb-lg">
+<div class="flex-1 flex flex-col min-h-0 pt-4">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-6">
 		<button
 			onclick={() => (isCreateSessionOpen = true)}
 			class="w-full block group text-left focus:outline-none h-full cursor-pointer"
@@ -24,7 +24,7 @@
 			<Card
 				class="h-full border border-dashed border-hairline hover:border-ink/20 hover:shadow-md transition-all duration-200 group-focus:ring-2 group-focus:ring-ink/20 flex flex-col justify-center"
 			>
-				<div class="flex items-center gap-xs">
+				<div class="flex items-center gap-2">
 					<Calendar
 						class="w-4 h-4 text-muted-soft group-hover:text-ink transition-colors"
 						strokeWidth={1.5}
@@ -62,7 +62,7 @@
 						{/if}
 					</div>
 					{#if isActive}
-						<p class="text-xs text-semantic-success mt-sm font-body-strong">Attendance Active</p>
+						<p class="text-xs text-semantic-success mt-3 font-body-strong">Attendance Active</p>
 					{/if}
 				</Card>
 			</a>
@@ -80,7 +80,7 @@
 				void getSessions(classId).refresh();
 			}
 		})}
-		class="flex flex-col gap-base"
+		class="flex flex-col gap-4"
 	>
 		{#if createSession.fields}
 			<input {...createSession.fields.classId.as('hidden', classId)} />
@@ -92,7 +92,7 @@
 			{...createSession.fields?.sessionDate.as('date', newSessionDate)}
 		/>
 
-		<div class="flex justify-end gap-sm mt-md">
+		<div class="flex justify-end gap-3 mt-5">
 			<Button variant="outline" type="button" onclick={() => (isCreateSessionOpen = false)}>
 				Cancel
 			</Button>

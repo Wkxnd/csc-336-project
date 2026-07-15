@@ -18,7 +18,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-lg h-full">
+<div class="flex flex-col gap-6 h-full">
 	<div class="flex justify-between items-center shrink-0">
 		<p class="text-muted text-[14px]">View your enrolled courses and track attendance.</p>
 		<Button onclick={() => (isEnrollOpen = true)}>Enroll in Class</Button>
@@ -26,17 +26,17 @@
 
 	{#if classes.length === 0}
 		<div
-			class="flex-1 flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
+			class="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 		>
-			<BookOpen class="w-12 h-12 text-muted-soft mb-sm" strokeWidth={1.5} />
+			<BookOpen class="w-12 h-12 text-muted-soft mb-3" strokeWidth={1.5} />
 			<h3 class="font-title-md text-ink text-[18px]">No Classes Yet</h3>
 			<p class="text-muted text-[14px] mt-1">Enroll in your first class to get started.</p>
-			<Button size="sm" variant="outline" class="mt-md" onclick={() => (isEnrollOpen = true)}>
+			<Button size="sm" variant="outline" class="mt-5" onclick={() => (isEnrollOpen = true)}>
 				Enroll Now
 			</Button>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each classes as c (c.id)}
 				<a
 					href={resolve(`/dashboard/student/class/${c.id}`)}
@@ -60,14 +60,14 @@
 							</div>
 
 							{#if c.attendance_rate !== null && c.attendance_rate !== undefined}
-								<div class="text-right shrink-0 ml-sm">
+								<div class="text-right shrink-0 ml-3">
 									<span class="text-[20px] font-display-md text-ink font-semibold">
 										{c.attendance_rate}%
 									</span>
 									<span class="text-[9px] text-muted-soft block">Attendance</span>
 								</div>
 							{:else}
-								<div class="text-right shrink-0 ml-sm">
+								<div class="text-right shrink-0 ml-3">
 									<span class="text-sm font-semibold text-muted">0%</span>
 									<span class="text-[9px] text-muted-soft block">Attendance</span>
 								</div>
@@ -83,7 +83,7 @@
 <Modal bind:isOpen={isEnrollOpen} title="Enroll in Class">
 	{#if enrollInClass.fields?.allIssues()?.length}
 		<div
-			class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
+			class="mb-4 p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-2 items-center"
 		>
 			{enrollInClass.fields?.allIssues()?.[0]?.message}
 		</div>
@@ -95,7 +95,7 @@
 				isEnrollOpen = false;
 			}
 		})}
-		class="flex flex-col gap-base"
+		class="flex flex-col gap-4"
 	>
 		<Input
 			id="enrollCode"
@@ -109,7 +109,7 @@
 			and register in the class roster.
 		</p>
 
-		<div class="flex justify-end gap-sm mt-md">
+		<div class="flex justify-end gap-3 mt-5">
 			<Button variant="outline" type="button" onclick={() => (isEnrollOpen = false)}>Cancel</Button>
 			<Button type="submit" disabled={!!enrollInClass.pending}>
 				{enrollInClass.pending ? 'Enrolling...' : 'Enroll'}

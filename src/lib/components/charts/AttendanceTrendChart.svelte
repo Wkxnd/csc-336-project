@@ -19,7 +19,7 @@
 
 {#if parsed.length === 0}
 	<div
-		class="flex items-center justify-center h-full text-muted text-[13px] text-center py-xl px-md"
+		class="flex items-center justify-center h-full text-muted text-[13px] text-center py-8 px-5"
 	>
 		No session data yet. Create and run sessions to see trends.
 	</div>

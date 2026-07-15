@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { BadgeCheck, ChartColumn, ChevronLeft, MessageCircle } from '@lucide/svelte';
+	import { BadgeCheck, ChartColumn, ChevronLeft, MessageCircle, CreditCard } from '@lucide/svelte';
 	import { logout, getCurrentUser } from '$lib/auth.remote';
 	import Button from '$lib/components/Button.svelte';
 
@@ -12,7 +12,8 @@
 		user.role === 'faculty'
 			? [
 					{ name: 'Dashboard', icon: ChartColumn, href: '/dashboard/faculty' as const },
-					{ name: 'Assistant', icon: MessageCircle, href: '/dashboard/faculty/assistant' as const }
+					{ name: 'Assistant', icon: MessageCircle, href: '/dashboard/faculty/assistant' as const },
+					{ name: 'Billing', icon: CreditCard, href: '/dashboard/faculty/billing' as const }
 				]
 			: [{ name: 'Dashboard', icon: ChartColumn, href: '/dashboard/student' as const }]
 	);
@@ -23,8 +24,8 @@
 		? 'w-64'
 		: 'w-0 overflow-hidden border-r-0'}"
 >
-	<div class="h-20 flex items-center px-lg border-b border-hairline shrink-0 justify-between">
-		<a href={resolve(`/dashboard/${user.role}`)} class="flex items-center gap-sm">
+	<div class="h-20 flex items-center px-6 border-b border-hairline shrink-0 justify-between">
+		<a href={resolve(`/dashboard/${user.role}`)} class="flex items-center gap-3">
 			<BadgeCheck class="w-6 h-6 text-ink" strokeWidth={1.5} />
 			<span class="font-display-md text-[20px] text-ink font-normal tracking-tight">AttendLink</span
 			>
@@ -39,10 +40,10 @@
 		</button>
 	</div>
 
-	<nav class="flex-1 px-sm py-md overflow-y-auto flex flex-col gap-xs">
+	<nav class="flex-1 px-3 py-5 overflow-y-auto flex flex-col gap-2">
 		{#each navLinks as link (link.href)}
 			<a
-				class="flex items-center gap-sm px-sm py-xs rounded-lg bg-surface-container text-ink font-body-strong transition-colors"
+				class="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container text-ink font-body-strong transition-colors"
 				href={resolve(link.href)}
 			>
 				<link.icon class="w-5 h-5" strokeWidth={1.5} />
@@ -51,8 +52,8 @@
 		{/each}
 	</nav>
 
-	<div class="p-md border-t border-hairline shrink-0 flex flex-col gap-sm">
-		<div class="flex items-center gap-sm p-xs rounded-lg">
+	<div class="p-5 border-t border-hairline shrink-0 flex flex-col gap-3">
+		<div class="flex items-center gap-3 p-2 rounded-lg">
 			<div
 				class="w-10 h-10 rounded-full bg-gradient-sky flex items-center justify-center font-body-strong text-ink font-semibold"
 			>

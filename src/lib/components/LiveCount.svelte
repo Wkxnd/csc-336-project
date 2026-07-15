@@ -13,7 +13,7 @@
 </script>
 
 {#if liveCount.connected}
-	<div transition:slide class="mt-lg border-t border-hairline pt-base w-full">
+	<div transition:slide class="mt-6 border-t border-hairline pt-4 w-full">
 		<p class="text-2xl font-display-md text-ink">
 			<!-- TODO: these 2 awaits will get combined together right? -->
 			{(await liveCount).present}/{(await liveCount).total}

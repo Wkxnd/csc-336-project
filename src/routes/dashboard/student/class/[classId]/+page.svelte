@@ -22,7 +22,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-lg h-full">
+<div class="flex flex-col gap-6 h-full">
 	<Card class="shrink-0" gradientOrb={true} orbVariant="lavender">
 		<div class="flex justify-between items-center">
 			<div>
@@ -33,14 +33,14 @@
 					{classData.name}
 				</h2>
 				{#if classData.description}
-					<p class="text-sm text-on-surface-variant mt-sm leading-relaxed">
+					<p class="text-sm text-on-surface-variant mt-3 leading-relaxed">
 						{classData.description}
 					</p>
 				{/if}
 			</div>
 
 			<div
-				class="text-center bg-surface-container px-lg py-sm rounded-lg border border-hairline shrink-0 ml-lg"
+				class="text-center bg-surface-container px-6 py-3 rounded-lg border border-hairline shrink-0 ml-6"
 			>
 				<span class="font-display-lg text-[28px] text-ink font-semibold">
 					{classData.attendance_rate || 0}%
@@ -53,23 +53,23 @@
 	</Card>
 
 	<div class="flex-1 flex flex-col min-h-0">
-		<h3 class="font-title-md text-[18px] text-ink mb-base">Attendance History</h3>
+		<h3 class="font-title-md text-[18px] text-ink mb-4">Attendance History</h3>
 
 		{#if attendanceHistory.length === 0}
 			<div
-				class="flex-1 flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
+				class="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 			>
-				<Calendar class="w-10 h-10 text-muted-soft mb-sm" strokeWidth={1.5} />
+				<Calendar class="w-10 h-10 text-muted-soft mb-3" strokeWidth={1.5} />
 				<h3 class="font-title-md text-ink text-[16px]">No Sessions Yet</h3>
 				<p class="text-muted text-[13px] mt-1">
 					No lecture sessions have been recorded for this class yet.
 				</p>
 			</div>
 		{:else}
-			<div class="flex flex-col gap-xs overflow-y-auto">
+			<div class="flex flex-col gap-2 overflow-y-auto">
 				{#each attendanceHistory as r (r.session_date)}
 					<div
-						class="flex justify-between items-center p-base border border-hairline rounded-xl bg-surface-card hover:bg-surface-container-low transition-colors"
+						class="flex justify-between items-center p-4 border border-hairline rounded-xl bg-surface-card hover:bg-surface-container-low transition-colors"
 					>
 						<div class="min-w-0">
 							<span class="font-body-strong text-ink text-sm block">

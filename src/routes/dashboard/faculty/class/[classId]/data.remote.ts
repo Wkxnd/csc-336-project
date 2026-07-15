@@ -1,17 +1,21 @@
-import { query, form } from '$app/server';
+import { query, form, command } from '$app/server';
 import { sql } from '$lib/server/db';
 import { randomBytes } from 'crypto';
 import { getFaculty } from '$lib/auth.remote';
 import {
 	createSessionSchema,
 	uuidSchema,
+	addNetworkRestrictionSchema,
+	removeNetworkRestrictionSchema,
 	type ClassSession,
 	type Class,
 	type Student,
 	type AttendanceTrendPoint,
-	type StudentAttendanceSummary
+	type StudentAttendanceSummary,
+	type ClassNetworkRestrictionRow
 } from '$lib/types';
 import { error } from '@sveltejs/kit';
+import { getFacultyPlan, requirePlan } from '$lib/server/plans';
 
 export const getClass = query(uuidSchema, async (classId) => {
 	const user = await getFaculty();
@@ -106,3 +110,51 @@ export const getClassStudentSummary = query(uuidSchema, async (classId) => {
 		ORDER BY attendance_rate ASC
 	`;
 });
+
+export const getNetworkRestrictions = query(uuidSchema, async (classId) => {
+	const user = await getFaculty();
+	await getClass(classId);
+
+	const plan = await getFacultyPlan(user.id);
+	const restrictions = await sql<ClassNetworkRestrictionRow[]>`
+		SELECT class_id, allowed_asn, created_at
+		FROM class_network_restrictions
+		WHERE class_id = ${classId}
+		ORDER BY allowed_asn ASC
+	`;
+
+	return { plan, canManage: plan === 'enterprise', restrictions };
+});
+
+export const addNetworkRestriction = command(
+	addNetworkRestrictionSchema,
+	async ({ classId, allowedAsn }) => {
+		const user = await getFaculty();
+		await requirePlan(user.id, 'enterprise');
+		await getClass(classId);
+
+		await sql`
+			INSERT INTO class_network_restrictions (class_id, allowed_asn)
+			VALUES (${classId}, ${allowedAsn})
+			ON CONFLICT DO NOTHING
+		`;
+
+		void getNetworkRestrictions(classId).refresh();
+	}
+);
+
+export const removeNetworkRestriction = command(
+	removeNetworkRestrictionSchema,
+	async ({ classId, allowedAsn }) => {
+		const user = await getFaculty();
+		await requirePlan(user.id, 'enterprise');
+		await getClass(classId);
+
+		await sql`
+			DELETE FROM class_network_restrictions
+			WHERE class_id = ${classId} AND allowed_asn = ${allowedAsn}
+		`;
+
+		void getNetworkRestrictions(classId).refresh();
+	}
+);

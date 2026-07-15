@@ -13,13 +13,13 @@
 		class?: string;
 	}
 
-	let { crumbs = [], class: className = 'mb-lg' }: Props = $props();
+	let { crumbs = [], class: className = 'mb-6' }: Props = $props();
 </script>
 
 {#if crumbs.length > 0}
 	<nav
 		aria-label="Breadcrumb"
-		class="flex items-center gap-sm font-display-lg text-[24px] tracking-tight {className}"
+		class="flex items-center gap-3 font-display-lg text-[24px] tracking-tight {className}"
 	>
 		{#each crumbs as crumb, i (i)}
 			{#if i > 0}

@@ -18,8 +18,8 @@
 	});
 </script>
 
-<div class="flex flex-col gap-lg h-full">
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-base">
+<div class="flex flex-col gap-6 h-full">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 		<button
 			onclick={() => (isCreateClassOpen = true)}
 			class="w-full block group text-left focus:outline-none h-full cursor-pointer"
@@ -27,7 +27,7 @@
 			<Card
 				class="h-full border border-dashed border-hairline hover:border-ink/20 hover:shadow-md transition-all duration-200 group-focus:ring-2 group-focus:ring-ink/20 flex flex-col justify-center"
 			>
-				<div class="flex items-center gap-sm">
+				<div class="flex items-center gap-3">
 					<BookOpen
 						class="w-5 h-5 text-muted-soft group-hover:text-ink transition-colors"
 						strokeWidth={1.5}
@@ -39,7 +39,7 @@
 					</span>
 				</div>
 				{#if classes.length === 0}
-					<p class="text-[12px] text-muted-soft mt-sm font-body">
+					<p class="text-[12px] text-muted-soft mt-3 font-body">
 						Create your first class to get started.
 					</p>
 				{/if}
@@ -62,7 +62,7 @@
 						{c.name}
 					</h3>
 					{#if c.description}
-						<p class="text-sm text-on-surface-variant mt-sm leading-relaxed line-clamp-2">
+						<p class="text-sm text-on-surface-variant mt-3 leading-relaxed line-clamp-2">
 							{c.description}
 						</p>
 					{/if}
@@ -75,7 +75,7 @@
 <Modal bind:isOpen={isCreateClassOpen} title="Create New Class">
 	{#if createClass.fields?.allIssues()?.length}
 		<div
-			class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
+			class="mb-4 p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-2 items-center"
 		>
 			{createClass.fields?.allIssues()?.[0]?.message}
 		</div>
@@ -87,7 +87,7 @@
 				isCreateClassOpen = false;
 			}
 		})}
-		class="flex flex-col gap-base"
+		class="flex flex-col gap-4"
 	>
 		<Input
 			id="classCode"
@@ -115,11 +115,11 @@
 				name="description"
 				placeholder="Add a brief description of the class syllabus or times..."
 				rows="3"
-				class="w-full p-base bg-surface-card border border-hairline rounded-lg text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-hairline transition-all duration-200"
+				class="w-full p-4 bg-surface-card border border-hairline rounded-lg text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-hairline transition-all duration-200"
 			></textarea>
 		</div>
 
-		<div class="flex justify-end gap-sm mt-md">
+		<div class="flex justify-end gap-3 mt-5">
 			<Button variant="outline" type="button" onclick={() => (isCreateClassOpen = false)}>
 				Cancel
 			</Button>

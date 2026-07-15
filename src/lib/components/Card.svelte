@@ -29,7 +29,7 @@
 
 <div
 	class="relative overflow-hidden bg-surface-card border border-hairline rounded-xl shadow-sm transition-all duration-300 {padded
-		? 'p-lg'
+		? 'p-6'
 		: ''} {className}"
 >
 	{#if gradientOrb}

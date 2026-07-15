@@ -28,7 +28,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen}
-	<div class="fixed inset-0 z-50 flex items-center justify-center p-md">
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-5">
 		<!-- Backdrop -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -46,7 +46,7 @@
 			aria-modal="true"
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between p-lg border-b border-hairline">
+			<div class="flex items-center justify-between p-6 border-b border-hairline">
 				<h3 class="font-title-md text-ink text-[18px]">{title}</h3>
 				<button
 					onclick={close}
@@ -58,14 +58,14 @@
 			</div>
 
 			<!-- Body -->
-			<div class="p-lg overflow-y-auto max-h-[60vh] font-body-md text-body leading-relaxed">
+			<div class="p-6 overflow-y-auto max-h-[60vh] font-body-md text-body leading-relaxed">
 				{@render children?.()}
 			</div>
 
 			<!-- Footer -->
 			{#if footer}
 				<div
-					class="flex justify-end gap-sm p-lg border-t border-hairline bg-surface-container-lowest"
+					class="flex justify-end gap-3 p-6 border-t border-hairline bg-surface-container-lowest"
 				>
 					{@render footer()}
 				</div>

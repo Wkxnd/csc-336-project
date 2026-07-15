@@ -25,9 +25,9 @@
 	);
 </script>
 
-<div class="flex-1 flex flex-col gap-lg min-h-0 overflow-y-auto mt-sm">
+<div class="flex-1 flex flex-col gap-6 min-h-0 overflow-y-auto mt-3">
 	<!-- Stat bar -->
-	<div class="grid grid-cols-3 gap-base shrink-0">
+	<div class="grid grid-cols-3 gap-4 shrink-0">
 		<Card class="text-center">
 			<p class="font-display-md text-[28px] text-ink font-normal">{sessions.length}</p>
 			<p class="text-muted text-[12px] font-caption-uppercase uppercase tracking-wider mt-1">
@@ -52,7 +52,7 @@
 
 	<!-- Trend chart -->
 	<Card>
-		<h3 class="font-title-md text-[16px] text-ink mb-md">Attendance Trend</h3>
+		<h3 class="font-title-md text-[16px] text-ink mb-5">Attendance Trend</h3>
 		<div class="h-52">
 			<AttendanceTrendChart data={trend} />
 		</div>
@@ -61,33 +61,33 @@
 	<!-- Student breakdown table -->
 	{#if totalStudents > 0}
 		<Card>
-			<h3 class="font-title-md text-[16px] text-ink mb-md">Student Breakdown</h3>
+			<h3 class="font-title-md text-[16px] text-ink mb-5">Student Breakdown</h3>
 			<div class="overflow-x-auto">
 				<table class="w-full text-[13px]">
 					<thead>
 						<tr class="text-left border-b border-hairline">
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider"
 								>Name</th
 							>
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider"
 								>Rate</th
 							>
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
 								>Present</th
 							>
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
 								>Late</th
 							>
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden sm:table-cell"
 								>Absent</th
 							>
 							<th
-								class="pb-sm font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden md:table-cell"
+								class="pb-3 font-caption-uppercase text-muted uppercase text-[11px] tracking-wider hidden md:table-cell"
 								>Excused</th
 							>
 						</tr>
@@ -97,12 +97,12 @@
 							<tr
 								class="border-b border-hairline/50 last:border-0 hover:bg-surface-container-lowest transition-colors"
 							>
-								<td class="py-sm pr-base">
+								<td class="py-3 pr-4">
 									<p class="font-body-strong text-ink">{s.student_name}</p>
 									<p class="text-muted text-[11px]">{s.student_email}</p>
 								</td>
-								<td class="py-sm pr-base">
-									<div class="flex items-center gap-sm">
+								<td class="py-3 pr-4">
+									<div class="flex items-center gap-3">
 										{const rate = s.attendance_rate}
 										{const rateColor =
 											rate >= 80
@@ -126,12 +126,12 @@
 										</div>
 									</div>
 								</td>
-								<td class="py-sm pr-base text-ink hidden sm:table-cell">{s.present_count}</td>
-								<td class="py-sm pr-base text-amber-600 hidden sm:table-cell">{s.late_count}</td>
-								<td class="py-sm pr-base text-semantic-error hidden sm:table-cell"
+								<td class="py-3 pr-4 text-ink hidden sm:table-cell">{s.present_count}</td>
+								<td class="py-3 pr-4 text-amber-600 hidden sm:table-cell">{s.late_count}</td>
+								<td class="py-3 pr-4 text-semantic-error hidden sm:table-cell"
 									>{s.absent_count}</td
 								>
-								<td class="py-sm text-muted hidden md:table-cell">{s.excused_count}</td>
+								<td class="py-3 text-muted hidden md:table-cell">{s.excused_count}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -140,9 +140,9 @@
 		</Card>
 	{:else}
 		<div
-			class="flex-1 flex flex-col items-center justify-center text-center p-xl border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
+			class="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-hairline rounded-xl bg-surface-container-lowest"
 		>
-			<BarChart2 class="w-10 h-10 text-muted-soft mb-sm" strokeWidth={1.5} />
+			<BarChart2 class="w-10 h-10 text-muted-soft mb-3" strokeWidth={1.5} />
 			<h3 class="font-title-md text-ink text-[16px]">No Data Yet</h3>
 			<p class="text-muted text-[13px] mt-1">
 				Create sessions and record attendance to see analytics.

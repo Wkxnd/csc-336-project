@@ -53,9 +53,42 @@ export interface UserSessionRow {
 	created_at: string;
 }
 
+export type SubscriptionPlan = 'free' | 'premium' | 'enterprise';
+export type RevenueSource = 'subscription' | 'service_fee' | 'ads' | 'data_sale';
+
+export interface SubscriptionRow {
+	id: string;
+	user_id: string;
+	plan: SubscriptionPlan;
+	status: string;
+	starts_at: string;
+	ends_at: string | null;
+	created_at: string;
+}
+
+export interface PaymentRow {
+	id: string;
+	user_id: string | null;
+	amount: string | number;
+	currency: string;
+	source: RevenueSource;
+	description: string | null;
+	created_at: string;
+}
+
+export interface ClassNetworkRestrictionRow {
+	class_id: string;
+	allowed_asn: number;
+	created_at: string;
+}
+
 // --- Derived Types ---
 
 export type User = Omit<UserRow, 'created_at' | 'password_hash'>;
+
+export type Subscription = Omit<SubscriptionRow, 'created_at'>;
+
+export type Payment = PaymentRow;
 
 export type Class = ClassRow & { attendance_rate?: number };
 
@@ -146,4 +179,20 @@ export const updateAttendanceStatusSchema = v.object({
 	sessionId: v.pipe(v.string(), v.uuid()),
 	studentId: v.pipe(v.string(), v.uuid()),
 	status: v.picklist(['present', 'absent', 'late', 'excused'])
+});
+
+export const subscriptionPlanSchema = v.picklist(['free', 'premium', 'enterprise']);
+
+export const upgradePlanSchema = v.object({
+	plan: subscriptionPlanSchema
+});
+
+export const addNetworkRestrictionSchema = v.object({
+	classId: v.pipe(v.string(), v.uuid()),
+	allowedAsn: v.pipe(v.number(), v.integer(), v.minValue(1, 'ASN must be a positive integer'))
+});
+
+export const removeNetworkRestrictionSchema = v.object({
+	classId: v.pipe(v.string(), v.uuid()),
+	allowedAsn: v.pipe(v.number(), v.integer(), v.minValue(1))
 });

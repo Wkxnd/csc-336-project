@@ -19,7 +19,7 @@
 </script>
 
 <span
-	class="inline-flex items-center px-sm py-xxs border rounded-full font-caption-uppercase text-caption-uppercase font-semibold tracking-wider select-none {variantStyles[
+	class="inline-flex items-center px-3 py-0.5 border rounded-full font-caption-uppercase text-caption-uppercase font-semibold tracking-wider select-none {variantStyles[
 		variant
 	]} {className}"
 >

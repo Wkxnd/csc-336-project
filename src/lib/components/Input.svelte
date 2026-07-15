@@ -48,7 +48,7 @@
 		{disabled}
 		bind:value
 		{...rest}
-		class="w-full h-11 px-base bg-surface-card border {error
+		class="w-full h-11 px-4 bg-surface-card border {error
 			? 'border-semantic-error focus:ring-semantic-error/20'
 			: 'border-hairline focus:ring-ink/20'} rounded-lg text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 disabled:bg-surface-container-low disabled:text-muted disabled:cursor-not-allowed transition-all duration-200"
 	/>

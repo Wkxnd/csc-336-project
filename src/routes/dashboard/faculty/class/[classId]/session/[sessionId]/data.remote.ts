@@ -10,6 +10,7 @@ import {
 } from '$lib/types';
 import { getFaculty } from '$lib/auth.remote';
 import { error } from '@sveltejs/kit';
+import { requirePlan } from '$lib/server/plans';
 
 const QR_TOKEN_WINDOW_MS = 15_000;
 
@@ -153,9 +154,10 @@ export const getLiveAttendanceCount = query.live(uuidSchema, async function* (se
 });
 
 export const exportSessionCsv = query(uuidSchema, async (sessionId) => {
-	await getFaculty();
+	const user = await getFaculty();
+	await requirePlan(user.id, 'premium');
 
-const rows = await sql<AttendanceRecord[]>`
+	const rows = await sql<AttendanceRecord[]>`
 		SELECT u.first_name, u.last_name, u.email,
 			COALESCE(ar.status, 'absent') AS status,
 			ar.verified_at, ar.ip_address, ar.user_agent

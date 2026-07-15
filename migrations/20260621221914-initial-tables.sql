@@ -3,7 +3,7 @@
 -- Enums
 CREATE TYPE role_type AS ENUM ('faculty', 'student');
 CREATE TYPE attendance_status AS ENUM ('present', 'absent', 'late', 'excused');
-CREATE TYPE subscription_plan AS ENUM ('free', 'premium_faculty');
+CREATE TYPE subscription_plan AS ENUM ('free', 'premium', 'enterprise');
 CREATE TYPE revenue_source AS ENUM ('subscription', 'service_fee', 'ads', 'data_sale');
 
 -- Users table
@@ -73,10 +73,10 @@ CREATE TABLE user_sessions (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
--- Subscriptions table (Membership-based SAAS model)
+-- Subscriptions table (Membership-based SAAS model; one plan per user)
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     plan subscription_plan NOT NULL DEFAULT 'free',
     status VARCHAR(50) NOT NULL DEFAULT 'active',
     starts_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -101,8 +101,8 @@ CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 CREATE INDEX idx_class_sessions_class_id ON class_sessions(class_id);
 CREATE INDEX idx_attendance_records_student_id ON attendance_records(student_id);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
-CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_payments_user_id ON payments(user_id);
+CREATE INDEX idx_payments_created_at ON payments(created_at);
 
 -- Views for analytics & read-only reporting
 CREATE VIEW class_attendance_summary AS
@@ -138,3 +138,44 @@ SELECT
     currency
 FROM payments
 GROUP BY source, currency;
+
+CREATE VIEW developer_revenue_monthly AS
+SELECT
+    date_trunc('month', created_at)::date AS month,
+    source AS revenue_source,
+    COUNT(id) AS transaction_count,
+    SUM(amount) AS total_revenue,
+    currency
+FROM payments
+GROUP BY date_trunc('month', created_at), source, currency;
+
+-- One-click plan upgrade: upsert subscription + record payment
+CREATE OR REPLACE PROCEDURE record_subscription_payment(
+    p_user_id UUID,
+    p_plan subscription_plan,
+    p_amount DECIMAL(10, 2),
+    p_description TEXT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO subscriptions (user_id, plan, status, starts_at, ends_at)
+    VALUES (p_user_id, p_plan, 'active', NOW(), NULL)
+    ON CONFLICT (user_id) DO UPDATE
+        SET plan = EXCLUDED.plan,
+            status = 'active',
+            starts_at = NOW(),
+            ends_at = NULL;
+
+    IF p_plan <> 'free' AND p_amount > 0 THEN
+        INSERT INTO payments (user_id, amount, currency, source, description)
+        VALUES (
+            p_user_id,
+            p_amount,
+            'USD',
+            'subscription',
+            COALESCE(p_description, initcap(p_plan::text) || ' plan subscription')
+        );
+    END IF;
+END;
+$$;

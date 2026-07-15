@@ -4,6 +4,7 @@ import { createHmac } from 'crypto';
 import { getStudent } from '$lib/auth.remote';
 import { uuidSchema, verifyQrCheckInSchema } from '$lib/types';
 import { error } from '@sveltejs/kit';
+import { resolveAsnFromIp } from '$lib/server/plans';
 
 function getQrToken(secret: string, offset: number = 0): string {
 	const timeWindow = Math.floor(Date.now() / 15000) + offset;
@@ -14,24 +15,27 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 	const { request } = getRequestEvent();
 	const user = await getStudent();
 
-	const [session] = await sql<{ qr_secret: string | null; attendance_expires_at: string | null }[]>`
-		SELECT qr_secret, attendance_expires_at
+	const [session] = await sql<
+		{
+			qr_secret: string | null;
+			attendance_expires_at: string | null;
+			class_id: string;
+		}[]
+	>`
+		SELECT qr_secret, attendance_expires_at, class_id
 		FROM class_sessions
 		WHERE id = ${sessionId}
 	`;
 
 	if (!session) {
-		// throw new Error('Session not found');
 		error(404, 'Session not found');
 	}
 
 	if (session.attendance_expires_at && new Date(session.attendance_expires_at) < new Date()) {
-		// throw new Error('Attendance session has closed');
 		error(403, 'Attendance session has closed');
 	}
 
 	if (!session.qr_secret) {
-		// throw new Error('QR code not available for this session');
 		error(403, 'QR code not available for this session');
 	}
 
@@ -39,18 +43,30 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 	const expectedPrevious = getQrToken(session.qr_secret, -1);
 
 	if (token !== expectedCurrent && token !== expectedPrevious) {
-		// throw new Error('Invalid or expired QR code');
 		error(400, 'Invalid or expired QR code');
 	}
 
-	const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+	const ipHeader = request.headers.get('x-forwarded-for') || '127.0.0.1';
+	const ip = ipHeader.split(',')[0]?.trim() || '127.0.0.1';
 	const userAgent = request.headers.get('user-agent') || 'Unknown';
+	const asn = resolveAsnFromIp(ip);
+
+	const allowed = await sql<{ allowed_asn: number }[]>`
+		SELECT allowed_asn FROM class_network_restrictions WHERE class_id = ${session.class_id}
+	`;
+
+	if (allowed.length > 0 && !allowed.some((r) => r.allowed_asn === asn)) {
+		error(
+			403,
+			`Check-in blocked: your network ASN (${asn}) is not on this class allowlist.`
+		);
+	}
 
 	await sql`
-		INSERT INTO attendance_records (session_id, student_id, status, verified_at, ip_address, user_agent)
-		VALUES (${sessionId}, ${user.id}, 'present', NOW(), ${ip}, ${userAgent})
+		INSERT INTO attendance_records (session_id, student_id, status, verified_at, ip_address, asn, user_agent)
+		VALUES (${sessionId}, ${user.id}, 'present', NOW(), ${ip}, ${asn}, ${userAgent})
 		ON CONFLICT (session_id, student_id)
-		DO UPDATE SET status = 'present', verified_at = NOW(), ip_address = ${ip}, user_agent = ${userAgent}
+		DO UPDATE SET status = 'present', verified_at = NOW(), ip_address = ${ip}, asn = ${asn}, user_agent = ${userAgent}
 	`;
 
 	return {
@@ -59,8 +75,6 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 		verified_at: new Date().toISOString(),
 		status: 'present'
 	};
-
-	// void getStudentLatestCheckInDetails(sessionId).refresh();
 });
 
 export const getStudentLatestCheckInDetails = query(uuidSchema, async (sessionId) => {

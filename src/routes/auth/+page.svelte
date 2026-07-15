@@ -14,7 +14,7 @@
 </script>
 
 <div
-	class="relative min-h-screen bg-surface flex flex-col items-center justify-center p-md overflow-hidden text-body font-body-md antialiased"
+	class="relative min-h-screen bg-surface flex flex-col items-center justify-center p-5 overflow-hidden text-body font-body-md antialiased"
 >
 	<div
 		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-200 max-h-200 bg-gradient-sky rounded-full blur-[120px] opacity-25 pointer-events-none mix-blend-multiply"
@@ -24,13 +24,13 @@
 	></div>
 
 	<main class="relative z-10 w-full max-w-112 flex flex-col items-center text-center fade-in-up">
-		<div class="flex items-center gap-sm mb-lg">
+		<div class="flex items-center gap-3 mb-6">
 			<BadgeCheck class="w-8 h-8 text-ink" strokeWidth={1.5} />
 			<h1 class="font-display-md text-[28px] text-ink tracking-tight font-normal">AttendLink</h1>
 		</div>
 
 		<Card class="w-full text-left" gradientOrb={true} orbVariant="peach">
-			<div class="mb-lg">
+			<div class="mb-6">
 				<h2 class="font-title-md text-ink text-[22px] tracking-tight">
 					{isRegister ? 'Create Account' : 'Welcome Back'}
 				</h2>
@@ -43,7 +43,7 @@
 
 			{#if !isRegister && login.fields?.allIssues()?.length}
 				<div
-					class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
+					class="mb-4 p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-2 items-center"
 				>
 					<TriangleAlert class="w-5 h-5 shrink-0" fill="currentColor" />
 					{login.fields?.allIssues()?.[0]?.message}
@@ -52,7 +52,7 @@
 
 			{#if isRegister && register.fields?.allIssues()?.length}
 				<div
-					class="mb-base p-sm bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-xs items-center"
+					class="mb-4 p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-lg text-semantic-error text-[14px] font-medium flex gap-2 items-center"
 				>
 					<TriangleAlert class="w-5 h-5 shrink-0" fill="currentColor" />
 					{register.fields?.allIssues()?.[0]?.message}
@@ -60,7 +60,7 @@
 			{/if}
 
 			{#if !isRegister}
-				<form {...login} class="flex flex-col gap-base">
+				<form {...login} class="flex flex-col gap-4">
 					<Input
 						id="email"
 						label="Email"
@@ -75,7 +75,7 @@
 						{...login.fields?.password.as('password')}
 					/>
 
-					<Button type="submit" class="w-full mt-sm" disabled={!!login.pending}>
+					<Button type="submit" class="w-full mt-3" disabled={!!login.pending}>
 						{#if login.pending}
 							Loading...
 						{:else}
@@ -84,8 +84,8 @@
 					</Button>
 				</form>
 			{:else}
-				<form {...register} class="flex flex-col gap-base">
-					<div class="flex gap-sm">
+				<form {...register} class="flex flex-col gap-4">
+					<div class="flex gap-3">
 						<Input
 							id="firstName"
 							label="First Name"
@@ -143,7 +143,7 @@
 						{...register.fields?.password.as('password')}
 					/>
 
-					<Button type="submit" class="w-full mt-sm" disabled={!!register.pending}>
+					<Button type="submit" class="w-full mt-3" disabled={!!register.pending}>
 						{#if register.pending}
 							Loading...
 						{:else}
@@ -153,7 +153,7 @@
 				</form>
 			{/if}
 
-			<div class="mt-lg text-center">
+			<div class="mt-6 text-center">
 				<button
 					type="button"
 					onclick={() => {
@@ -166,7 +166,7 @@
 			</div>
 		</Card>
 
-		<footer class="mt-xl text-[12px] text-muted-soft">
+		<footer class="mt-8 text-[12px] text-muted-soft">
 			&copy; {new Date().getFullYear()} AttendLink. Premium Class Attendance SAAS.
 		</footer>
 	</main>

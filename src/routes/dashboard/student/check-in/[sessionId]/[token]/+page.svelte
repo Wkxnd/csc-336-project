@@ -21,34 +21,34 @@
 			{const details = await verifyQrCheckIn({ sessionId: params.sessionId, token: params.token })}
 
 			<div
-				class="fade-in-up w-20 h-20 mb-lg rounded-full border border-hairline bg-surface-container-lowest flex items-center justify-center shadow-sm"
+				class="fade-in-up w-20 h-20 mb-6 rounded-full border border-hairline bg-surface-container-lowest flex items-center justify-center shadow-sm"
 			>
 				<Check class="w-8 h-8 text-ink" strokeWidth={1.5} />
 			</div>
 
 			<!-- Heading -->
 			<h1
-				class="fade-in-up delay-100 font-display-mega text-[44px] md:text-display-mega text-ink mb-md tracking-tight leading-[1.1]"
+				class="fade-in-up delay-100 font-display-mega text-[44px] md:text-display-mega text-ink mb-5 tracking-tight leading-[1.1]"
 			>
 				Attendance<br />Completed
 			</h1>
 			<p
-				class="fade-in-up delay-100 font-body-md text-body-md text-on-surface-variant mb-xl max-w-[28rem]"
+				class="fade-in-up delay-100 font-body-md text-body-md text-on-surface-variant mb-8 max-w-[28rem]"
 			>
 				Your presence has been recorded successfully. You are all set for this lecture session.
 			</p>
 
 			<!-- Details Card -->
 			<div
-				class="fade-in-up delay-200 w-full max-w-[28rem] bg-surface-container-lowest border border-hairline rounded-xl p-lg flex flex-col mb-xl shadow-sm"
+				class="fade-in-up delay-200 w-full max-w-[28rem] bg-surface-container-lowest border border-hairline rounded-xl p-6 flex flex-col mb-8 shadow-sm"
 			>
-				<div class="flex justify-between items-center py-sm border-b border-hairline text-left">
+				<div class="flex justify-between items-center py-3 border-b border-hairline text-left">
 					<span class="font-caption-uppercase text-[11px] text-muted uppercase">Class</span>
 					<span class="font-body-strong text-ink font-semibold text-[14px] ml-4 text-right">
 						{details.class_name}
 					</span>
 				</div>
-				<div class="flex justify-between items-center py-sm border-b border-hairline text-left">
+				<div class="flex justify-between items-center py-3 border-b border-hairline text-left">
 					<span class="font-caption-uppercase text-[11px] text-muted uppercase">Session Date</span>
 					<span class="font-body-strong text-ink font-semibold text-[14px] ml-4 text-right">
 						{new Date(details.session_date).toLocaleDateString(undefined, {
@@ -58,7 +58,7 @@
 						})}
 					</span>
 				</div>
-				<div class="flex justify-between items-center py-sm text-left">
+				<div class="flex justify-between items-center py-3 text-left">
 					<span class="font-caption-uppercase text-[11px] text-muted uppercase">Recorded At</span>
 					<span class="font-body-strong text-ink font-semibold text-[14px] ml-4 text-right">
 						{new Date(details.verified_at).toLocaleTimeString(undefined, {
@@ -72,7 +72,7 @@
 
 			<!-- CTA Button -->
 			<Button
-				class="fade-in-up delay-300 flex items-center gap-sm"
+				class="fade-in-up delay-300 flex items-center gap-3"
 				onclick={() => goto(resolve('/dashboard/student'))}
 			>
 				View My History
@@ -80,7 +80,7 @@
 			</Button>
 
 			{#snippet pending()}
-				<div class="flex flex-col items-center gap-md">
+				<div class="flex flex-col items-center gap-5">
 					<!-- Animated Spinner -->
 					<div
 						class="w-16 h-16 border-4 border-hairline border-t-ink rounded-full animate-spin"
@@ -97,10 +97,10 @@
 			{#snippet failed(error: App.Error, reset)}
 				<!-- Error Card -->
 				<Card class="text-left" gradientOrb={true} orbVariant="rose">
-					<div class="flex flex-col items-center text-center p-md">
+					<div class="flex flex-col items-center text-center p-5">
 						<!-- Error Warning Icon -->
 						<div
-							class="w-20 h-20 mb-lg rounded-full border border-semantic-error/20 bg-semantic-error/5 flex items-center justify-center"
+							class="w-20 h-20 mb-6 rounded-full border border-semantic-error/20 bg-semantic-error/5 flex items-center justify-center"
 						>
 							<CircleAlert class="w-10 h-10 text-semantic-error" strokeWidth={1.5} />
 						</div>
@@ -108,12 +108,12 @@
 						<h2 class="font-display-md text-[26px] text-ink tracking-tight font-normal">
 							Check-In Failed
 						</h2>
-						<p class="font-body-md text-body-md text-on-surface-variant my-base max-w-96">
+						<p class="font-body-md text-body-md text-on-surface-variant my-4 max-w-96">
 							<!-- TODO: how to properly type these errors -->
 							{error.message}
 						</p>
 
-						<div class="flex gap-sm w-full mt-md">
+						<div class="flex gap-3 w-full mt-5">
 							<Button
 								variant="outline"
 								class="flex-1"

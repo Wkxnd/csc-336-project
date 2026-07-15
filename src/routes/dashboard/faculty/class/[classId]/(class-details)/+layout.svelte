@@ -13,8 +13,13 @@
 	let { params, children }: Props = $props();
 	const classId = $derived(params.classId);
 
-	// Determine active tab based on pathname
-	const activeTab = $derived(page.url.pathname.endsWith('/analytics') ? 'analytics' : 'sessions');
+	const activeTab = $derived(
+		page.url.pathname.endsWith('/analytics')
+			? 'analytics'
+			: page.url.pathname.endsWith('/settings')
+				? 'settings'
+				: 'sessions'
+	);
 
 	const classData = $derived(await getClass(classId));
 
@@ -27,12 +32,11 @@
 	});
 </script>
 
-<div class="flex flex-col gap-lg h-full">
-	<!-- Tab Bar -->
-	<div class="flex gap-sm border-b border-hairline shrink-0">
+<div class="flex flex-col gap-6 h-full">
+	<div class="flex gap-3 border-b border-hairline shrink-0">
 		<a
 			href={resolve(`/dashboard/faculty/class/${classId}`)}
-			class="flex items-center gap-xs pb-sm px-xs text-[14px] font-body-strong border-b-2 transition-colors cursor-pointer {activeTab ===
+			class="flex items-center gap-2 pb-3 px-2 text-[14px] font-body-strong border-b-2 transition-colors cursor-pointer {activeTab ===
 			'sessions'
 				? 'border-ink text-ink'
 				: 'border-transparent text-muted hover:text-ink'}"
@@ -41,12 +45,21 @@
 		</a>
 		<a
 			href={resolve(`/dashboard/faculty/class/${classId}/analytics`)}
-			class="flex items-center gap-xs pb-sm px-xs text-[14px] font-body-strong border-b-2 transition-colors cursor-pointer {activeTab ===
+			class="flex items-center gap-2 pb-3 px-2 text-[14px] font-body-strong border-b-2 transition-colors cursor-pointer {activeTab ===
 			'analytics'
 				? 'border-ink text-ink'
 				: 'border-transparent text-muted hover:text-ink'}"
 		>
 			Analytics
+		</a>
+		<a
+			href={resolve(`/dashboard/faculty/class/${classId}/settings`)}
+			class="flex items-center gap-2 pb-3 px-2 text-[14px] font-body-strong border-b-2 transition-colors cursor-pointer {activeTab ===
+			'settings'
+				? 'border-ink text-ink'
+				: 'border-transparent text-muted hover:text-ink'}"
+		>
+			Settings
 		</a>
 	</div>
 
