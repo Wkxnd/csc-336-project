@@ -1,4 +1,3 @@
-# TODO: test this
 FROM node:26-alpine AS build
 
 RUN npm install -g pnpm

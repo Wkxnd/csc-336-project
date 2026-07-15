@@ -2,10 +2,17 @@ services:
   # app:
   #   build: .
   #   ports:
-  #     - 3000:3000
-  #   # environment: TODO: make this
+  #     - 5173:5173
+  #   environment:
+  #     # - ORIGIN=http://localhost:5173
+  #     - PORT=5173
+  #     - PROTOCOL_HEADER=x-forwarded-proto
+  #     - HOST_HEADER=x-forwarded-host
+  #     - DATABASE_URL=postgresql://root:mysecretpassword@db:5432/local
   #   env_file:
-  #     - .env # TODO: make this
+  #     - .env.container # this should have your GCP + vertex configuration
+  #   volumes:
+  #     - ./gcp_sa.json:/app/gcp_sa.json:ro,z
   #   depends_on:
   #     db:
   #       condition: service_healthy
@@ -18,7 +25,7 @@ services:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: local
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U root -d local -h 127.0.0.1 -p 5432']
+      test: ["CMD-SHELL", "pg_isready -U root -d local -h 127.0.0.1 -p 5432"]
       interval: 2s
       timeout: 5s
       retries: 15

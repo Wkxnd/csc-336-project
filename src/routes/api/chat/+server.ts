@@ -7,7 +7,7 @@ import {
 	isStepCount,
 	type UIMessage
 } from 'ai';
-import { chatModel } from '$lib/server/ai/provider';
+import { getChatModel } from '$lib/server/ai/provider';
 import { createFacultyTools } from '$lib/server/ai/tools';
 import type { RequestHandler } from './$types';
 // TODO: why is this an api endpoint and not remote function
@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const { messages }: { messages: UIMessage[] } = await request.json();
 
 	const result = streamText({
-		model: chatModel,
+		model: getChatModel(),
 		system: SYSTEM_PROMPT,
 		messages: await convertToModelMessages(messages),
 		tools: createFacultyTools(user.id),
