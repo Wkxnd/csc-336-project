@@ -2,7 +2,7 @@ import { query, command } from '$app/server';
 import { sql } from '$lib/server/db';
 import { getFaculty } from '$lib/auth.remote';
 import { PLAN_PRICES, getFacultyPlan } from '$lib/server/plans';
-import { upgradePlanSchema, type Subscription, type SubscriptionPlan } from '$lib/types';
+import { upgradePlanSchema, type Subscription } from '$lib/types';
 import { error } from '@sveltejs/kit';
 
 export const getMySubscription = query(async () => {
@@ -36,5 +36,4 @@ export const upgradePlan = command(upgradePlanSchema, async ({ plan }) => {
 	await sql`CALL record_subscription_payment(${user.id}, ${plan}::subscription_plan, ${amount}, ${`${plan[0]!.toUpperCase()}${plan.slice(1)} plan subscription`})`;
 
 	void getMySubscription().refresh();
-	return { plan, amount };
 });

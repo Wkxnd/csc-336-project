@@ -43,13 +43,12 @@
 	);
 
 	$effect(() => {
-		if (session) {
-			breadcrumbs.set([
-				{ label: 'Classes', href: '/dashboard/faculty' },
-				{ label: classCode, href: `/dashboard/faculty/class/${classId}` },
-				{ label: formattedSessionDate }
-			]);
-		}
+		breadcrumbs.set([
+			{ label: 'Classes', href: '/dashboard/faculty' },
+			{ label: classCode, href: `/dashboard/faculty/class/${classId}` },
+			{ label: formattedSessionDate }
+		]);
+
 		return () => breadcrumbs.clear();
 	});
 

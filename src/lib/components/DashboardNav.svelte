@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { BadgeCheck, ChartColumn, ChevronLeft, MessageCircle, CreditCard } from '@lucide/svelte';
 	import { logout, getCurrentUser } from '$lib/auth.remote';
@@ -42,9 +43,16 @@
 
 	<nav class="flex-1 px-3 py-5 overflow-y-auto flex flex-col gap-2">
 		{#each navLinks as link (link.href)}
+			{const isActive =
+				link.href === `/dashboard/${user.role}`
+					? page.url.pathname === resolve(link.href)
+					: page.url.pathname.startsWith(resolve(link.href))}
 			<a
-				class="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container text-ink font-body-strong transition-colors"
+				class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {isActive
+					? 'bg-surface-container text-ink font-body-strong'
+					: 'text-muted hover:bg-surface-container/50 hover:text-ink'}"
 				href={resolve(link.href)}
+				aria-current={isActive ? 'page' : undefined}
 			>
 				<link.icon class="w-5 h-5" strokeWidth={1.5} />
 				{link.name}

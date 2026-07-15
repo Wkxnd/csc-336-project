@@ -11,5 +11,5 @@ export const PLAN_LABELS = {
 	enterprise: 'Enterprise'
 } as const;
 
-export const PLAN_LIMIT_COPY =
-	'Limits: Free max 1 class · Premium+ export · Enterprise ASN restrictions.';
+// export const PLAN_LIMIT_COPY =
+// 	'Limits: Free max 1 class · Premium+ export · Enterprise ASN restrictions.';

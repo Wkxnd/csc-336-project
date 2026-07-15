@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getMySubscription, upgradePlan } from '$lib/billing.remote';
-	import { PLAN_LABELS, PLAN_PRICES, PLAN_LIMIT_COPY } from '$lib/plans';
+	import { PLAN_LABELS, PLAN_PRICES } from '$lib/plans';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Badge from '$lib/components/Badge.svelte';
@@ -41,11 +41,8 @@
 		message = null;
 		errorMessage = null;
 		try {
-			const result = await upgradePlan({ plan });
-			message =
-				plan === 'free'
-					? 'Switched to Free.'
-					: `Upgraded to ${PLAN_LABELS[plan]} — recorded $${result.amount.toFixed(2)}.`;
+			await upgradePlan({ plan });
+			message = plan === 'free' ? 'Switched to Free.' : `Upgraded to ${PLAN_LABELS[plan]}.`;
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Upgrade failed';
 		} finally {
@@ -63,9 +60,6 @@
 			</h1>
 			<Badge>{subscription.status}</Badge>
 		</div>
-		<p class="text-muted text-[14px] mt-2">
-			One-click upgrades write a subscription + payment row. No card details needed.
-		</p>
 	</div>
 
 	{#if message}
@@ -123,7 +117,7 @@
 		{/each}
 	</div>
 
-	<p class="text-[12px] text-muted-soft">
+	<!-- <p class="text-[12px] text-muted-soft">
 		{PLAN_LIMIT_COPY}
-	</p>
+	</p> -->
 </div>
