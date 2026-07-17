@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { sql } from '$lib/server/db';
 import { randomBytes } from 'crypto';
 
@@ -10,7 +11,9 @@ export function setSessionCookie(cookies: Cookies, sessionId: string): void {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: true,
+		// Secure cookies require HTTPS; Safari (unlike Chrome) drops them on http://localhost,
+		// so only enforce Secure outside dev.
+		secure: !dev,
 		maxAge: SESSION_EXPIRATION_TIME
 	});
 }

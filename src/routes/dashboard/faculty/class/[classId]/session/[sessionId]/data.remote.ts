@@ -153,6 +153,25 @@ export const getLiveAttendanceCount = query.live(uuidSchema, async function* (se
 	}
 });
 
+/** Live-streaming list of only the students who have marked attendance, newest first. */
+export const getLiveCheckIns = query.live(uuidSchema, async function* (sessionId) {
+	await getFaculty();
+
+	while (true) {
+		const checkedIn = await sql<
+			{ first_name: string; last_name: string; email: string; verified_at: string }[]
+		>`
+			SELECT u.first_name, u.last_name, u.email, ar.verified_at
+			FROM attendance_records ar
+			JOIN users u ON ar.student_id = u.id
+			WHERE ar.session_id = ${sessionId} AND ar.status = 'present'
+			ORDER BY ar.verified_at DESC
+		`;
+		yield checkedIn;
+		await new Promise((f) => setTimeout(f, 3000));
+	}
+});
+
 export const exportSessionCsv = query(uuidSchema, async (sessionId) => {
 	const user = await getFaculty();
 	await requirePlan(user.id, 'premium');

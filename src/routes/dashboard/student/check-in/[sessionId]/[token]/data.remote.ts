@@ -20,11 +20,15 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 			qr_secret: string | null;
 			attendance_expires_at: string | null;
 			class_id: string;
+			class_name: string;
+			session_date: string;
 		}[]
 	>`
-		SELECT qr_secret, attendance_expires_at, class_id
-		FROM class_sessions
-		WHERE id = ${sessionId}
+		SELECT cs.qr_secret, cs.attendance_expires_at, cs.class_id,
+			c.name AS class_name, cs.session_date
+		FROM class_sessions cs
+		JOIN classes c ON cs.class_id = c.id
+		WHERE cs.id = ${sessionId}
 	`;
 
 	if (!session) {
@@ -70,8 +74,8 @@ export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId
 	`;
 
 	return {
-		class_name: 'test',
-		session_date: new Date().toISOString(),
+		class_name: session.class_name,
+		session_date: session.session_date,
 		verified_at: new Date().toISOString(),
 		status: 'present'
 	};
