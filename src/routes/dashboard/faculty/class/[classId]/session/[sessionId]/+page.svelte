@@ -14,6 +14,8 @@
 	import { getMySubscription } from '$lib/billing.remote';
 	import Button from '$lib/components/Button.svelte';
 	import LiveCount from '$lib/components/LiveCount.svelte';
+	import CountdownTimer from '$lib/components/CountdownTimer.svelte';
+	import LiveCheckInList from '$lib/components/LiveCheckInList.svelte';
 	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
 	import type { PageProps } from './$types';
 
@@ -159,8 +161,14 @@
 
 				<!-- Stats Column -->
 				<div class="flex flex-col gap-4 lg:w-70 shrink-0 w-full">
+					<!-- Countdown until attendance closes -->
+					<CountdownTimer expiresAt={liveQr.expiresAt} />
+
 					<!-- Live Attendance Counter -->
 					<LiveCount {sessionId} />
+
+					<!-- Live list of students who have marked attendance -->
+					<LiveCheckInList {sessionId} />
 
 					<!-- Dev copy link -->
 					{#if dev}
