@@ -10,7 +10,7 @@ import {
 import { getChatModel } from '$lib/server/ai/provider';
 import { createFacultyTools } from '$lib/server/ai/tools';
 import type { RequestHandler } from './$types';
-// TODO: why is this an api endpoint and not remote function
+
 const SYSTEM_PROMPT = `You are an attendance analytics assistant for a university professor.
 You help answer questions about their classes, students, sessions, and attendance.
 
