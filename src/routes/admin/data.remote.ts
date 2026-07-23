@@ -1,6 +1,7 @@
 import { query } from '$app/server';
 import { sql } from '$lib/server/db';
-import type { PaymentRow, RevenueSource, SubscriptionPlan } from '$lib/types';
+import type { PaymentRow, RevenueSource, SubscriptionPlan, RevenueDateRange } from '$lib/types';
+import { revenueDateRangeSchema } from '$lib/types';
 import { PLAN_PRICES } from '$lib/server/plans';
 
 export interface RevenueBySource {
@@ -29,16 +30,35 @@ export interface PlanCount {
 	subscriber_count: number;
 }
 
-export const getRevenueOverview = query(async () => {
+/**
+ * Optional date-range filter over `payments.created_at`. Either bound may be null
+ * (meaning "no limit"), so the same filter serves both filtered and all-time requests.
+ * `developer_revenue_summary`/`developer_revenue_monthly` can't take params (they're plain
+ * views), so the filtered queries below re-run the same aggregation directly against `payments`.
+ */
+function paymentsDateFilter({ startDate, endDate }: RevenueDateRange) {
+	return sql`
+		(${startDate}::date IS NULL OR p.created_at >= ${startDate}::date)
+		AND (${endDate}::date IS NULL OR p.created_at < (${endDate}::date + INTERVAL '1 day'))
+	`;
+}
+
+export const getRevenueOverview = query(revenueDateRangeSchema, async (range) => {
 	const bySource = await sql<RevenueBySource[]>`
-		SELECT revenue_source, transaction_count::integer, total_revenue, currency
-		FROM developer_revenue_summary
+		SELECT source AS revenue_source, COUNT(id)::integer AS transaction_count,
+			SUM(amount) AS total_revenue, currency
+		FROM payments p
+		WHERE ${paymentsDateFilter(range)}
+		GROUP BY source, currency
 		ORDER BY total_revenue DESC
 	`;
 
 	const monthly = await sql<RevenueMonthly[]>`
-		SELECT month::text, revenue_source, transaction_count::integer, total_revenue, currency
-		FROM developer_revenue_monthly
+		SELECT date_trunc('month', p.created_at)::date::text AS month, source AS revenue_source,
+			COUNT(id)::integer AS transaction_count, SUM(amount) AS total_revenue, currency
+		FROM payments p
+		WHERE ${paymentsDateFilter(range)}
+		GROUP BY date_trunc('month', p.created_at), source, currency
 		ORDER BY month ASC, revenue_source
 	`;
 
@@ -47,10 +67,13 @@ export const getRevenueOverview = query(async () => {
 			u.email, u.first_name, u.last_name
 		FROM payments p
 		LEFT JOIN users u ON u.id = p.user_id
+		WHERE ${paymentsDateFilter(range)}
 		ORDER BY p.created_at DESC
 		LIMIT 50
 	`;
 
+	// Active subscriber counts (and therefore MRR) reflect the *current* plan snapshot —
+	// `subscriptions` has no history table, so this intentionally ignores the date range.
 	const planCounts = await sql<PlanCount[]>`
 		SELECT plan, COUNT(*)::integer AS subscriber_count
 		FROM subscriptions
@@ -78,12 +101,13 @@ export const getRevenueOverview = query(async () => {
 	};
 });
 
-export const exportRevenueCsv = query(async () => {
+export const exportRevenueCsv = query(revenueDateRangeSchema, async (range) => {
 	const rows = await sql<PaymentWithUser[]>`
 		SELECT p.id, p.user_id, p.amount, p.currency, p.source, p.description, p.created_at,
 			u.email, u.first_name, u.last_name
 		FROM payments p
 		LEFT JOIN users u ON u.id = p.user_id
+		WHERE ${paymentsDateFilter(range)}
 		ORDER BY p.created_at DESC
 	`;
 
@@ -93,8 +117,7 @@ export const exportRevenueCsv = query(async () => {
 		return `"${str.replace(/"/g, '""')}"`;
 	};
 
-	const header =
-		'ID,Created At,Source,Amount,Currency,Description,User Email,First Name,Last Name';
+	const header = 'ID,Created At,Source,Amount,Currency,Description,User Email,First Name,Last Name';
 	const lines = rows.map((r) =>
 		[
 			r.id,
