@@ -32,7 +32,9 @@ export const getSession = query(uuidSchema, async (sessionId) => {
 	await getFaculty();
 
 	const [row] = await sql<ClassSessionRow[]>`
-		SELECT * FROM class_sessions WHERE id = ${sessionId}
+		SELECT *
+		FROM class_sessions
+		WHERE id = ${sessionId}
 	`;
 
 	return row ?? error(404, 'Session not found');
@@ -43,16 +45,24 @@ export const startAttendance = command(
 	async ({ sessionId, durationMinutes }) => {
 		await getFaculty();
 
-		const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
-		const [session] = await sql<ClassSessionRow[]>`
-			UPDATE class_sessions
-			SET attendance_expires_at = ${expiresAt}
-			WHERE id = ${sessionId}
-			RETURNING *
+		await sql`
+			CALL start_attendance_session(
+				${sessionId},
+				${durationMinutes}
+			)
 		`;
 
+		const [session] = await sql<ClassSessionRow[]>`
+			SELECT *
+			FROM class_sessions
+			WHERE id = ${sessionId}
+		`;
+
+		if (!session) {
+			error(404, 'Session not found');
+		}
+
 		void getSession(sessionId).set(session);
-		// void getSessions(session.class_id).refresh();
 		void getLiveRotatingQrToken(sessionId).reconnect();
 	}
 );
@@ -66,18 +76,13 @@ export const stopAttendance = command(uuidSchema, async (sessionId) => {
 		WHERE id = ${sessionId}
 		RETURNING *
 	`;
-	// await sql`
-	// 	UPDATE class_sessions
-	// 	SET attendance_expires_at = NOW()
-	// 	WHERE id = ${sessionId}`;
 
-	// void getSessions(sessionId).refresh();
-	// void getSessions(session.class_id).refresh();
+	if (!session) {
+		error(404, 'Session not found');
+	}
 
 	void getSession(sessionId).set(session);
 	void getLiveRotatingQrToken(sessionId).reconnect();
-
-	// return { success: true, session };
 });
 
 export const getLiveRotatingQrToken = query.live(uuidSchema, async function* (sessionId) {
@@ -91,17 +96,28 @@ export const getLiveRotatingQrToken = query.live(uuidSchema, async function* (se
 			FROM class_sessions
 			WHERE id = ${sessionId}
 		`;
+
 		const expiresAt = session?.attendance_expires_at ?? null;
 		const expiresAtMs = expiresAt ? new Date(expiresAt).getTime() : null;
 		const now = Date.now();
 
 		if (!session?.qr_secret || expiresAtMs === null || expiresAtMs <= now) {
-			yield { active: false, token: null, expiresAt };
+			yield {
+				active: false,
+				token: null,
+				expiresAt
+			};
+
 			await sleep(QR_TOKEN_WINDOW_MS);
 			continue;
 		}
 
-		yield { active: true, token: getQrToken(session.qr_secret, 0, now), expiresAt };
+		yield {
+			active: true,
+			token: getQrToken(session.qr_secret, 0, now),
+			expiresAt
+		};
+
 		await sleep(Math.min(getNextQrWindowDelay(now), expiresAtMs - now));
 	}
 });
@@ -110,15 +126,26 @@ export const getSessionAttendance = query(uuidSchema, async (sessionId) => {
 	await getFaculty();
 
 	return await sql<AttendanceRecord[]>`
-			SELECT u.id as student_id, u.first_name, u.last_name, u.email,
-				COALESCE(ar.status, 'absent') as status, ar.verified_at, ar.ip_address, ar.user_agent
-			FROM class_sessions cs
-			JOIN enrollments e ON cs.class_id = e.class_id
-			JOIN users u ON e.student_id = u.id
-			LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = u.id
-			WHERE cs.id = ${sessionId}
-			ORDER BY u.last_name ASC, u.first_name ASC
-		`;
+		SELECT
+			u.id AS student_id,
+			u.first_name,
+			u.last_name,
+			u.email,
+			COALESCE(ar.status, 'absent') AS status,
+			ar.verified_at,
+			ar.ip_address,
+			ar.user_agent
+		FROM class_sessions cs
+		JOIN enrollments e
+			ON cs.class_id = e.class_id
+		JOIN users u
+			ON e.student_id = u.id
+		LEFT JOIN attendance_records ar
+			ON ar.session_id = cs.id
+			AND ar.student_id = u.id
+		WHERE cs.id = ${sessionId}
+		ORDER BY u.last_name ASC, u.first_name ASC
+	`;
 });
 
 export const updateAttendanceStatus = command(
@@ -127,10 +154,22 @@ export const updateAttendanceStatus = command(
 		await getFaculty();
 
 		await sql`
-			INSERT INTO attendance_records (session_id, student_id, status, verified_at)
-			VALUES (${sessionId}, ${studentId}, ${status}, NOW())
+			INSERT INTO attendance_records (
+				session_id,
+				student_id,
+				status,
+				verified_at
+			)
+			VALUES (
+				${sessionId},
+				${studentId},
+				${status},
+				NOW()
+			)
 			ON CONFLICT (session_id, student_id)
-			DO UPDATE SET status = ${status}, verified_at = NOW()
+			DO UPDATE SET
+				status = ${status},
+				verified_at = NOW()
 		`;
 
 		void getSessionAttendance(sessionId).refresh();
@@ -140,16 +179,26 @@ export const updateAttendanceStatus = command(
 export const getLiveAttendanceCount = query.live(uuidSchema, async function* (sessionId) {
 	while (true) {
 		const [result] = await sql<[{ present_count: string; total_count: string }]>`
-				SELECT
-					COUNT(*) FILTER (WHERE ar.status = 'present') as present_count,
-					COUNT(*) as total_count
-				FROM class_sessions cs
-				JOIN enrollments e ON e.class_id = cs.class_id
-				LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = e.student_id
-				WHERE cs.id = ${sessionId}
-			`;
-		yield { present: Number(result.present_count), total: Number(result.total_count) };
-		await new Promise((f) => setTimeout(f, 3000));
+			SELECT
+				COUNT(*) FILTER (
+					WHERE ar.status = 'present'
+				) AS present_count,
+				COUNT(*) AS total_count
+			FROM class_sessions cs
+			JOIN enrollments e
+				ON e.class_id = cs.class_id
+			LEFT JOIN attendance_records ar
+				ON ar.session_id = cs.id
+				AND ar.student_id = e.student_id
+			WHERE cs.id = ${sessionId}
+		`;
+
+		yield {
+			present: Number(result.present_count),
+			total: Number(result.total_count)
+		};
+
+		await sleep(3000);
 	}
 });
 
@@ -159,16 +208,28 @@ export const getLiveCheckIns = query.live(uuidSchema, async function* (sessionId
 
 	while (true) {
 		const checkedIn = await sql<
-			{ first_name: string; last_name: string; email: string; verified_at: string }[]
+			{
+				first_name: string;
+				last_name: string;
+				email: string;
+				verified_at: string;
+			}[]
 		>`
-			SELECT u.first_name, u.last_name, u.email, ar.verified_at
+			SELECT
+				u.first_name,
+				u.last_name,
+				u.email,
+				ar.verified_at
 			FROM attendance_records ar
-			JOIN users u ON ar.student_id = u.id
-			WHERE ar.session_id = ${sessionId} AND ar.status = 'present'
+			JOIN users u
+				ON ar.student_id = u.id
+			WHERE ar.session_id = ${sessionId}
+				AND ar.status = 'present'
 			ORDER BY ar.verified_at DESC
 		`;
+
 		yield checkedIn;
-		await new Promise((f) => setTimeout(f, 3000));
+		await sleep(3000);
 	}
 });
 
@@ -177,27 +238,50 @@ export const exportSessionCsv = query(uuidSchema, async (sessionId) => {
 	await requirePlan(user.id, 'premium');
 
 	const rows = await sql<AttendanceRecord[]>`
-		SELECT u.first_name, u.last_name, u.email,
+		SELECT
+			u.first_name,
+			u.last_name,
+			u.email,
 			COALESCE(ar.status, 'absent') AS status,
-			ar.verified_at, ar.ip_address, ar.user_agent
+			ar.verified_at,
+			ar.ip_address,
+			ar.user_agent
 		FROM class_sessions cs
-		JOIN enrollments e ON cs.class_id = e.class_id
-		JOIN users u ON e.student_id = u.id
-		LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = u.id
+		JOIN enrollments e
+			ON cs.class_id = e.class_id
+		JOIN users u
+			ON e.student_id = u.id
+		LEFT JOIN attendance_records ar
+			ON ar.session_id = cs.id
+			AND ar.student_id = u.id
 		WHERE cs.id = ${sessionId}
 		ORDER BY u.last_name ASC, u.first_name ASC
 	`;
 
-	const escape = (v: unknown) => {
-		if (v === null || v === undefined) return '""';
-		const str = v instanceof Date ? v.toISOString() : String(v);
+	const escape = (value: unknown) => {
+		if (value === null || value === undefined) {
+			return '""';
+		}
+
+		const str = value instanceof Date ? value.toISOString() : String(value);
 		return `"${str.replace(/"/g, '""')}"`;
 	};
+
 	const header = 'First Name,Last Name,Email,Status,Verified At,IP Address,User Agent';
-	const lines = rows.map((r) =>
-		[r.first_name, r.last_name, r.email, r.status, r.verified_at, r.ip_address, r.user_agent]
+
+	const lines = rows.map((row) =>
+		[
+			row.first_name,
+			row.last_name,
+			row.email,
+			row.status,
+			row.verified_at,
+			row.ip_address,
+			row.user_agent
+		]
 			.map(escape)
 			.join(',')
 	);
+
 	return [header, ...lines].join('\n');
 });
