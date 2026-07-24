@@ -10,6 +10,7 @@
 		Inbox
 	} from '@lucide/svelte';
 	import { getRevenueOverview, exportRevenueCsv } from './data.remote';
+	import type { RevenueBySource, RevenueMonthly, PaymentWithUser, PlanCount } from './data.remote';
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -57,7 +58,24 @@
 		range = { ...range, endDate: value || null };
 	}
 
-	const overview = $derived(await getRevenueOverview(range));
+	const dateRangeError = $derived(
+		range.startDate && range.endDate && range.startDate > range.endDate
+			? 'From date must be before To date'
+			: null
+	);
+
+	const EMPTY_OVERVIEW = {
+		bySource: [] as RevenueBySource[],
+		monthly: [] as RevenueMonthly[],
+		recentPayments: [] as PaymentWithUser[],
+		planCounts: [] as PlanCount[],
+		totalRevenue: 0,
+		transactionCount: 0,
+		mrr: 0
+	};
+
+	const overviewQuery = $derived(getRevenueOverview(range));
+	const overview = $derived(overviewQuery.current ?? EMPTY_OVERVIEW);
 	let exporting = $state(false);
 	let exportError = $state<string | null>(null);
 
@@ -90,6 +108,20 @@
 		service_fee: 'var(--color-gradient-sky)',
 		ads: 'var(--color-gradient-peach)',
 		data_sale: 'var(--color-gradient-mint)'
+	};
+
+	const AREA_CHART_PADDING = { left: 16, bottom: 8, top: 8, right: 16 };
+	const AREA_CHART_SERIES = [{ key: 'total', label: 'Revenue', color: 'var(--color-ink)' }];
+	const AREA_CHART_PROPS = {
+		xAxis: {
+			format: (d: Date) =>
+				new Date(d).toLocaleDateString(undefined, { month: 'short', year: '2-digit' })
+		},
+		yAxis: {
+			format: (v: number) => `$${v}`
+		},
+		area: { fillOpacity: 0.15, class: 'fill-ink' },
+		line: { class: 'stroke-ink', strokeWidth: 2 }
 	};
 
 	async function handleExport() {
@@ -127,7 +159,7 @@
 				>
 					Revenue dashboard
 				</h1>
-				{#if $effect.pending()}
+				{#if overviewQuery.loading}
 					<span class="text-[12px] text-muted animate-pulse">Updating…</span>
 				{/if}
 			</div>
@@ -176,22 +208,28 @@
 				This year
 			</Button>
 		</div>
-		<div class="flex flex-wrap items-end gap-3 border-t border-hairline pt-4">
-			<div class="w-36">
+		<div
+			class="flex flex-col gap-3 border-t border-hairline pt-4 sm:flex-row sm:flex-wrap sm:items-start"
+		>
+			<div class="w-full sm:w-auto">
 				<Input
 					id="revenueStartDate"
 					label="From"
 					type="date"
+					class="sm:w-48"
 					value={range.startDate ?? ''}
+					error={dateRangeError ?? ''}
 					oninput={(e) => setCustomStart(e.currentTarget.value)}
 				/>
 			</div>
-			<div class="w-36">
+			<div class="w-full sm:w-auto">
 				<Input
 					id="revenueEndDate"
 					label="To"
 					type="date"
+					class="sm:w-48"
 					value={range.endDate ?? ''}
+					error={dateRangeError ?? ''}
 					oninput={(e) => setCustomEnd(e.currentTarget.value)}
 				/>
 			</div>
@@ -248,21 +286,11 @@
 						data={monthlyTotals}
 						x="date"
 						y="total"
-						padding={{ left: 16, bottom: 8, top: 8, right: 16 }}
+						padding={AREA_CHART_PADDING}
 						axis={true}
 						grid={true}
-						props={{
-							xAxis: {
-								format: (d: Date) =>
-									new Date(d).toLocaleDateString(undefined, { month: 'short', year: '2-digit' })
-							},
-							yAxis: {
-								format: (v: number) => `$${v}`
-							},
-							area: { fillOpacity: 0.15, class: 'fill-ink' },
-							line: { class: 'stroke-ink', strokeWidth: 2 }
-						}}
-						series={[{ key: 'total', label: 'Revenue', color: 'var(--color-ink)' }]}
+						props={AREA_CHART_PROPS}
+						series={AREA_CHART_SERIES}
 					/>
 				</div>
 			{/if}
