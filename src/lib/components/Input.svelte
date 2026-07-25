@@ -48,9 +48,9 @@
 		{disabled}
 		bind:value
 		{...rest}
-		class="w-full h-11 px-4 bg-surface-card border {error
+		class="w-full h-11 {type === 'date' ? 'pl-4 pr-2' : 'px-4'} bg-surface-card border {error
 			? 'border-semantic-error focus:ring-semantic-error/20'
-			: 'border-hairline focus:ring-ink/20'} rounded-lg text-ink font-body-md placeholder:text-muted-soft focus:outline-none focus:ring-2 disabled:bg-surface-container-low disabled:text-muted disabled:cursor-not-allowed transition-all duration-200"
+			: 'border-hairline focus:ring-ink/20'} rounded-lg text-ink font-body-md tabular-nums placeholder:text-muted-soft focus:outline-none focus:ring-2 disabled:bg-surface-container-low disabled:text-muted disabled:cursor-not-allowed transition-all duration-200 [&::-webkit-calendar-picker-indicator]:ml-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
 	/>
 
 	{#if error}
