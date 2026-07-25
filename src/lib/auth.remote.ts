@@ -1,6 +1,6 @@
 import { query, form, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
-import { error, invalid, redirect } from '@sveltejs/kit';
+import { error, invalid, redirect, isRedirect, isHttpError } from '@sveltejs/kit';
 import { createUserSession, destroySession, SESSION_COOKIE_NAME } from '$lib/server/session';
 import { hashPassword, verifyPassword } from '$lib/server/password';
 import { loginSchema, registerSchema, type User, type UserRow } from '$lib/types';
@@ -33,30 +33,30 @@ export const getCurrentUser = query(async () => {
 		return authRedirect(url);
 	}
 
-	try {
-		const [session] = await sql<(User & { expires_at: string })[]>`
-				SELECT u.id, u.email, u.first_name, u.last_name, u.role, us.expires_at
-				FROM user_sessions us
-				JOIN users u ON us.user_id = u.id
-				WHERE us.id = ${sessionId}
-			`;
+	let session: (User & { expires_at: string }) | undefined;
+      try {
+              [session] = await sql<(User & { expires_at: string })[]>`
+                      SELECT u.id, u.email, u.first_name, u.last_name, u.role, us.expires_at
+                      FROM user_sessions us
+                      JOIN users u ON us.user_id = u.id
+                      WHERE us.id = ${sessionId}
+              `;
+      } catch (err) {
+              if (isRedirect(err) || isHttpError(err)) throw err;
+			  console.error('Session lookup error:', err);
+			  return error(500, 'Internal Server Error');
+      }
 
-		if (!session) {
-			cookies.delete(SESSION_COOKIE_NAME, { path: '/' });
-			return authRedirect(url);
-		}
+      if (!session) {
+              return authRedirect(url);
+      }
 
-		if (new Date(session.expires_at) <= new Date()) {
-			await sql`DELETE FROM user_sessions WHERE id = ${sessionId}`;
-			cookies.delete(SESSION_COOKIE_NAME, { path: '/' });
-			return authRedirect(url);
-		}
+      if (new Date(session.expires_at) <= new Date()) {
+              await sql`DELETE FROM user_sessions WHERE id = ${sessionId}`;
+              return authRedirect(url);
+      }
 
-		return session;
-	} catch (err) {
-		console.error('Session lookup error:', err);
-		return error(500, 'Internal Server Error');
-	}
+      return session;
 });
 
 // TODO: maybe also treat these as type guards and return per-role types instead of just User

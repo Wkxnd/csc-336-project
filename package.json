@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"dev:tunnel": "concurrently -k -n app,tunnel -c blue,magenta \"vite dev --host\" \"untun tunnel http://localhost:5173\"",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
@@ -21,6 +22,8 @@
 		"seed": "node --env-file=.env migrations/seed.mjs"
 	},
 	"devDependencies": {
+		"concurrently": "^9.1.2",
+        "untun": "^0.1.3",
 		"@castlenine/svelte-qrcode": "^2.3.0",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.61.1",
@@ -56,6 +59,7 @@
 		"ai": "^7.0.22",
 		"layerchart": "^2.0.1",
 		"postgres": "^3.4.9",
+		"qr-scanner": "^1.4.2",
 		"valibot": "^1.4.2"
 	}
 }

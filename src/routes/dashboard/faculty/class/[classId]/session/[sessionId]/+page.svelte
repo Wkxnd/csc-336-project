@@ -34,6 +34,8 @@
 
 	let durationMinutes = $state(10);
 	let exportError = $state<string | null>(null);
+	let sessionError = $state<string | null>(null);
+	let sessionPending = $state(false);
 
 	const classCode = $derived((await getClass(classId)).code);
 
@@ -107,8 +109,18 @@
 						variant="outline"
 						size="sm"
 						class="border-semantic-error text-semantic-error hover:bg-semantic-error/5"
+						disabled={sessionPending}
 						onclick={async () => {
-							await stopAttendance(sessionId);
+							sessionError = null;
+							sessionPending = true;
+							try {
+								await stopAttendance(sessionId);
+							} catch (err) {
+								console.error('Failed to stop attendance:', err);
+								sessionError = err instanceof Error ? err.message : 'Failed to stop attendance';
+							} finally {
+								sessionPending = false;
+							}
 						}}
 					>
 						Stop Session
@@ -126,17 +138,31 @@
 						</select>
 						<Button
 							size="sm"
+							disabled={sessionPending}
 							onclick={async () => {
-								await startAttendance({ sessionId, durationMinutes });
+								sessionError = null;
+								sessionPending = true;
+								try {
+									await startAttendance({ sessionId, durationMinutes });
+								} catch (err) {
+									console.error('Failed to start attendance:', err);
+									sessionError = err instanceof Error ? err.message : 'Failed to start attendance';
+								} finally {
+									sessionPending = false;
+								}
 							}}
+
 						>
-							Start Attendance
+							{sessionPending ? 'Starting...' : 'Start Attendance'}
 						</Button>
 					</div>
 				{/if}
 			</div>
 			{#if exportError}
 				<p class="text-semantic-error text-[12px]">{exportError}</p>
+			{/if}
+			{#if sessionError}
+				<p class="text-semantic-error text-[12px]">{sessionError}</p>
 			{/if}
 		</div>
 	</div>

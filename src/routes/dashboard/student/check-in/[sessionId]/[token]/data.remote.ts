@@ -1,4 +1,4 @@
-import { query, command, getRequestEvent } from '$app/server';
+import { query, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
 import { getStudent } from '$lib/auth.remote';
 import { getAttendanceWindowStatus, isQrTokenValid } from '$lib/server/attendance';
@@ -7,7 +7,7 @@ import { uuidSchema, verifyQrCheckInSchema } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import { resolveAsnFromIp } from '$lib/server/plans';
 
-export const verifyQrCheckIn = command(verifyQrCheckInSchema, async ({ sessionId, token }) => {
+export const verifyQrCheckIn = query(verifyQrCheckInSchema, async ({sessionId, token}) => {
 	const { request } = getRequestEvent();
 	const user = await getStudent();
 

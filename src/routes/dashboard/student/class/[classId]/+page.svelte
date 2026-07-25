@@ -1,27 +1,77 @@
-<script lang="ts">
-	import { Calendar } from '@lucide/svelte';
-	import { getClass, getStudentAttendanceHistory } from './data.remote';
-	import Card from '$lib/components/Card.svelte';
-	import Badge from '$lib/components/Badge.svelte';
-	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
-	import { formatCalendarDate } from '$lib/date';
-	import type { PageProps } from './$types';
+<script lang='ts'>
+import { Calendar, QrCode } from '@lucide/svelte';
+      import { getClass, getStudentAttendanceHistory } from './data.remote';
+      import { verifyQrCheckIn } from '../../check-in/[sessionId]/[token]/data.remote';
+      import Card from '$lib/components/Card.svelte';
+      import Badge from '$lib/components/Badge.svelte';
+      import Button from '$lib/components/Button.svelte';
+      import Modal from '$lib/components/Modal.svelte';
+      import QrScanner from '$lib/components/QrScanner.svelte';
+      import { breadcrumbs } from '$lib/breadcrumbs.svelte';
+      import { formatCalendarDate } from '$lib/date';
+      import type { PageProps } from './$types';
 
-	let { params }: PageProps = $props();
-	const classId = $derived(params.classId);
+      let { params }: PageProps = $props();
+      const classId = $derived(params.classId);
 
-	const classData = $derived(await getClass(classId));
-	const attendanceHistory = $derived(await getStudentAttendanceHistory(classId));
+      const classData = $derived(await getClass(classId));
+      const attendanceHistory = $derived(await getStudentAttendanceHistory(classId));
 
-	$effect(() => {
-		breadcrumbs.set([
-			{ label: 'My Classes', href: '/dashboard/student' },
-			{ label: classData.code }
-		]);
 
-		return () => breadcrumbs.clear();
-	});
+      let showScanner = $state(false);
+      let checkinPending = $state(false);
+      let checkinError = $state<string | null>(null);
+      let checkinSuccess = $state<{ class_name: string; verified_at: string } | null>(null);
+
+      async function handleDetect(data: string) {
+              if (checkinPending) return; // ignore extra frames while one is in flight
+
+              // The QR encodes: https://host/dashboard/student/check-in/{sessionId}/{token}
+              let sessionId: string | undefined;
+              let token: string | undefined;
+              try {
+                      const parts = new URL(data).pathname.split('/').filter(Boolean);
+                      const i = parts.indexOf('check-in');
+                      if (i !== -1) {
+                              sessionId = parts[i + 1];
+                              token = parts[i + 2];
+                      }
+              } catch {
+                      // not a URL — fall through to the error below
+              }
+
+              if (!sessionId || !token) {
+                      checkinError = 'That QR code is not a valid check-in code.';
+                      showScanner = false;
+                      return;
+              }
+
+              checkinPending = true;
+              checkinError = null;
+              showScanner = false; // stop the camera as soon as we have a code
+              try {
+                      const result = await verifyQrCheckIn({ sessionId, token });
+                      checkinSuccess = { class_name: result.class_name, verified_at: result.verified_at };
+                      await getStudentAttendanceHistory(classId).refresh(); // update the history list below
+              } catch (err) {
+                      checkinError = err instanceof Error ? err.message : 'Check-in failed';
+              } finally {
+                      checkinPending = false;
+              }
+      }
+
+
+      $effect(() => {
+              breadcrumbs.set([
+                      { label: 'My Classes', href: '/dashboard/student' },
+                      { label: classData.code }
+              ]);
+
+              return () => breadcrumbs.clear();
+      });
 </script>
+
+
 
 <div class="flex flex-col gap-6 h-full">
 	<Card class="shrink-0" gradientOrb={true} orbVariant="lavender">
@@ -39,17 +89,23 @@
 					</p>
 				{/if}
 			</div>
+			 <div class="flex items-center gap-3 shrink-0 ml-6">
+                              <div
+                                      class="text-center bg-surface-container px-6 py-3 rounded-lg border border-hairline"
+                              >
+                                      <span class="font-display-lg text-[28px] text-ink font-semibold">
+                                              {classData.attendance_rate || 0}%
+                                      </span>
+                                      <span class="text-[10px] text-caption-uppercase text-muted block mt-0.5">
+                                              Your Attendance
+                                      </span>
+                              </div>
 
-			<div
-				class="text-center bg-surface-container px-6 py-3 rounded-lg border border-hairline shrink-0 ml-6"
-			>
-				<span class="font-display-lg text-[28px] text-ink font-semibold">
-					{classData.attendance_rate || 0}%
-				</span>
-				<span class="text-[10px] text-caption-uppercase text-muted block mt-0.5">
-					Your Attendance
-				</span>
-			</div>
+                              <Button size="sm" onclick={() => { checkinError = null; showScanner = true; }}>
+                                      <QrCode class="w-4 h-4 mr-2" strokeWidth={1.5} />
+                                      Check In
+                              </Button>
+                      </div>
 		</div>
 	</Card>
 
@@ -101,4 +157,24 @@
 			</div>
 		{/if}
 	</div>
+	 {#if checkinSuccess}
+              <div class="p-4 rounded-xl border border-semantic-success/30 bg-semantic-success/5 text-sm text-ink">
+                      ✅ Checked in to <strong>{checkinSuccess.class_name}</strong> at
+                      {new Date(checkinSuccess.verified_at).toLocaleTimeString()}.
+              </div>
+      {/if}
+      {#if checkinError}
+              <div class="p-4 rounded-xl border border-semantic-error/30 bg-semantic-error/5 text-sm text-semantic-error">
+                      {checkinError}
+              </div>
+      {/if}
+
+      <Modal bind:isOpen={showScanner} title="Scan Check-In QR" onclose={() => (showScanner = false)}>
+              <p class="text-muted text-[13px] mb-4">
+                      Point your camera at the QR code on the projector to mark your attendance.
+              </p>
+              {#if showScanner}
+                      <QrScanner ondetect={handleDetect} />
+              {/if}
+      </Modal>
 </div>

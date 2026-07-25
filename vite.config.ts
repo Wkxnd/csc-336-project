@@ -23,6 +23,9 @@ export default defineConfig({
 			adapter: adapter()
 		})
 	],
+	server: {
+			allowedHosts:true
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
