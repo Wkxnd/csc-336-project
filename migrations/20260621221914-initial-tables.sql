@@ -4,7 +4,7 @@
 CREATE TYPE role_type AS ENUM ('faculty', 'student');
 CREATE TYPE attendance_status AS ENUM ('present', 'absent', 'late', 'excused');
 CREATE TYPE subscription_plan AS ENUM ('free', 'premium', 'enterprise');
-CREATE TYPE revenue_source AS ENUM ('subscription', 'service_fee', 'ads', 'data_sale');
+CREATE TYPE revenue_source AS ENUM ('subscription', 'ads', 'data_sale');
 
 -- Users table
 CREATE TABLE users (
@@ -39,7 +39,7 @@ CREATE TABLE enrollments (
 CREATE TABLE class_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-    session_date TIMESTAMPTZ NOT NULL,
+    session_date DATE NOT NULL,
     qr_secret VARCHAR(255),
     attendance_expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL

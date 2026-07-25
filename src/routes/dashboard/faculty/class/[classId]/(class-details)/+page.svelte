@@ -6,13 +6,14 @@
 	import Button from '$lib/components/Button.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { formatCalendarDate, todayLocalDateString } from '$lib/date';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
 	const classId = $derived(params.classId);
 
 	let isCreateSessionOpen = $state(false);
-	let newSessionDate = $state(new Date().toISOString().slice(0, 10));
+	let newSessionDate = $state(todayLocalDateString());
 </script>
 
 <div class="flex-1 flex flex-col min-h-0 pt-4">
@@ -50,7 +51,7 @@
 				>
 					<div class="flex justify-between items-center">
 						<span class="font-body-strong text-ink text-[15px]">
-							{new Date(s.session_date).toLocaleDateString(undefined, {
+							{formatCalendarDate(s.session_date, {
 								weekday: 'short',
 								month: 'short',
 								day: 'numeric',

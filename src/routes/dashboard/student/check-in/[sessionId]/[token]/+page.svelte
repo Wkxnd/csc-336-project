@@ -5,6 +5,7 @@
 	import { verifyQrCheckIn } from './data.remote';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { formatCalendarDate } from '$lib/date';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
@@ -51,7 +52,7 @@
 				<div class="flex justify-between items-center py-3 border-b border-hairline text-left">
 					<span class="font-caption-uppercase text-[11px] text-muted uppercase">Session Date</span>
 					<span class="font-body-strong text-ink font-semibold text-[14px] ml-4 text-right">
-						{new Date(details.session_date).toLocaleDateString(undefined, {
+						{formatCalendarDate(details.session_date, {
 							weekday: 'long',
 							month: 'long',
 							day: 'numeric'

@@ -54,7 +54,7 @@ export interface UserSessionRow {
 }
 
 export type SubscriptionPlan = 'free' | 'premium' | 'enterprise';
-export type RevenueSource = 'subscription' | 'service_fee' | 'ads' | 'data_sale';
+export type RevenueSource = 'subscription' | 'ads' | 'data_sale';
 
 export interface SubscriptionRow {
 	id: string;
@@ -196,3 +196,10 @@ export const removeNetworkRestrictionSchema = v.object({
 	classId: v.pipe(v.string(), v.uuid()),
 	allowedAsn: v.pipe(v.number(), v.integer(), v.minValue(1))
 });
+
+export const revenueDateRangeSchema = v.object({
+	startDate: v.nullable(v.pipe(v.string(), v.isoDate('Invalid start date'))),
+	endDate: v.nullable(v.pipe(v.string(), v.isoDate('Invalid end date')))
+});
+
+export type RevenueDateRange = v.InferOutput<typeof revenueDateRangeSchema>;
