@@ -1,23 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { scryptSync, randomBytes, timingSafeEqual, createHmac } from 'crypto';
-
-// TODO: remove these duplicated function definitions.
-// Re-implement the hashing and token logic here for database-free testing of core mechanisms
-function hashPassword(password: string): string {
-	const salt = randomBytes(16).toString('hex');
-	const hash = scryptSync(password, salt, 64).toString('hex');
-	return `${salt}:${hash}`;
-}
-
-function verifyPassword(password: string, stored: string): boolean {
-	const [salt, hash] = stored.split(':');
-	const computedHash = scryptSync(password, salt, 64).toString('hex');
-	return timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computedHash, 'hex'));
-}
-
-function getQrToken(secret: string, timeWindow: number): string {
-	return createHmac('sha256', secret).update(timeWindow.toString()).digest('hex');
-}
+import {
+	getAttendanceWindowStatus,
+	getQrToken,
+	isQrTokenValid,
+	QR_TOKEN_WINDOW_MS
+} from '$lib/server/attendance';
+import { hashPassword, verifyPassword } from '$lib/server/password';
 
 describe('AttendLink Cryptographic Utilities', () => {
 	it('should successfully hash and verify passwords', () => {
@@ -29,13 +17,18 @@ describe('AttendLink Cryptographic Utilities', () => {
 		expect(verifyPassword('wrongPassword', hash)).toBe(false);
 	});
 
+	it('should reject malformed stored password hashes without throwing', () => {
+		expect(verifyPassword('password', 'malformed')).toBe(false);
+		expect(verifyPassword('password', 'salt:not-hex')).toBe(false);
+	});
+
 	it('should generate consistent QR tokens for identical time windows', () => {
 		const secret = 'test-session-secret-key';
-		const windowId = Math.floor(Date.now() / 15000);
+		const now = Date.now();
 
-		const token1 = getQrToken(secret, windowId);
-		const token2 = getQrToken(secret, windowId);
-		const tokenDifferentWindow = getQrToken(secret, windowId - 1);
+		const token1 = getQrToken(secret, 0, now);
+		const token2 = getQrToken(secret, 0, now);
+		const tokenDifferentWindow = getQrToken(secret, -1, now);
 
 		expect(token1).toBe(token2);
 		expect(token1).not.toBe(tokenDifferentWindow);
@@ -43,15 +36,21 @@ describe('AttendLink Cryptographic Utilities', () => {
 
 	it('should support checking both current and previous time windows to handle clock drift', () => {
 		const secret = 'some-secret-key';
-		const nowWindow = Math.floor(Date.now() / 15000);
+		const now = Date.now();
+		const previousToken = getQrToken(secret, -1, now);
+		const expiredToken = getQrToken(secret, -2, now);
 
-		const generatedToken = getQrToken(secret, nowWindow - 1); // Token generated 15s ago
+		expect(isQrTokenValid(secret, previousToken, now)).toBe(true);
+		expect(isQrTokenValid(secret, expiredToken, now)).toBe(false);
+	});
 
-		const verifiedCurrent = getQrToken(secret, nowWindow);
-		const verifiedPrevious = getQrToken(secret, nowWindow - 1);
+	it('should distinguish attendance sessions that are not started, active, or closed', () => {
+		const now = Date.now();
 
-		// Verifying that checking against both windows correctly matches the old token
-		const isMatched = generatedToken === verifiedCurrent || generatedToken === verifiedPrevious;
-		expect(isMatched).toBe(true);
+		expect(getAttendanceWindowStatus(null, now)).toBe('not-started');
+		expect(getAttendanceWindowStatus(new Date(now + QR_TOKEN_WINDOW_MS).toISOString(), now)).toBe(
+			'active'
+		);
+		expect(getAttendanceWindowStatus(new Date(now).toISOString(), now)).toBe('closed');
 	});
 });

@@ -94,7 +94,7 @@
 				</div>
 			{/snippet}
 
-			{#snippet failed(error: App.Error, reset)}
+			{#snippet failed(error: unknown, reset)}
 				<!-- Error Card -->
 				<Card class="text-left" gradientOrb={true} orbVariant="rose">
 					<div class="flex flex-col items-center text-center p-5">
@@ -109,8 +109,7 @@
 							Check-In Failed
 						</h2>
 						<p class="font-body-md text-body-md text-on-surface-variant my-4 max-w-96">
-							<!-- TODO: how to properly type these errors -->
-							{error.message}
+							{error instanceof Error ? error.message : 'Unable to complete check-in'}
 						</p>
 
 						<div class="flex gap-3 w-full mt-5">

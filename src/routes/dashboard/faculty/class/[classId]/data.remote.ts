@@ -2,34 +2,28 @@ import { query, form, command } from '$app/server';
 import { sql } from '$lib/server/db';
 import { randomBytes } from 'crypto';
 import { getFaculty } from '$lib/auth.remote';
+import { requireOwnedClass } from '$lib/server/authorization';
 import {
 	createSessionSchema,
 	uuidSchema,
 	addNetworkRestrictionSchema,
 	removeNetworkRestrictionSchema,
 	type ClassSession,
-	type Class,
 	type Student,
 	type AttendanceTrendPoint,
 	type StudentAttendanceSummary,
 	type ClassNetworkRestrictionRow
 } from '$lib/types';
-import { error } from '@sveltejs/kit';
 import { getFacultyPlan, requirePlan } from '$lib/server/plans';
 
 export const getClass = query(uuidSchema, async (classId) => {
 	const user = await getFaculty();
-
-	const [row] = await sql<Class[]>`
-		SELECT * FROM classes
-		WHERE id = ${classId} AND faculty_id = ${user.id}
-	`;
-	return row ?? error(404, 'Class not found');
+	return await requireOwnedClass(user.id, classId);
 });
 
 export const getSessions = query(uuidSchema, async (classId) => {
-	// TODO: scope classes to faculty
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedClass(user.id, classId);
 
 	return await sql<ClassSession[]>`
 		SELECT * FROM class_sessions
@@ -39,33 +33,32 @@ export const getSessions = query(uuidSchema, async (classId) => {
 });
 
 export const createSession = form(createSessionSchema, async ({ classId, sessionDate }) => {
-	// const user =
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedClass(user.id, classId);
 
 	const qrSecret = randomBytes(16).toString('hex');
-	const [session] = await sql<ClassSession[]>`
-		INSERT INTO class_sessions (class_id, session_date, qr_secret)
-		VALUES (${classId}, ${sessionDate}, ${qrSecret})
-		RETURNING *
-	`;
+	await sql.begin(async (transaction) => {
+		const [session] = await transaction<ClassSession[]>`
+			INSERT INTO class_sessions (class_id, session_date, qr_secret)
+			VALUES (${classId}, ${sessionDate}, ${qrSecret})
+			RETURNING *
+		`;
 
-	const students = await sql<{ student_id: string }[]>`
-		SELECT student_id FROM enrollments WHERE class_id = ${classId}
-	`;
-	for (const s of students) {
-		await sql`
+		await transaction`
 			INSERT INTO attendance_records (session_id, student_id, status)
-			VALUES (${session.id}, ${s.student_id}, 'absent')
+			SELECT ${session.id}, student_id, 'absent'
+			FROM enrollments
+			WHERE class_id = ${classId}
 			ON CONFLICT DO NOTHING
 		`;
-	}
+	});
 
 	void getSessions(classId).refresh();
 });
 
 export const getClassRoster = query(uuidSchema, async (classId) => {
-	// const user =
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedClass(user.id, classId);
 
 	return await sql<Student[]>`
 		SELECT u.id, u.first_name, u.last_name, u.email, e.enrolled_at
@@ -77,7 +70,8 @@ export const getClassRoster = query(uuidSchema, async (classId) => {
 });
 
 export const getClassAttendanceTrend = query(uuidSchema, async (classId) => {
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedClass(user.id, classId);
 
 	return await sql<AttendanceTrendPoint[]>`
 		SELECT
@@ -99,7 +93,8 @@ export const getClassAttendanceTrend = query(uuidSchema, async (classId) => {
 });
 
 export const getClassStudentSummary = query(uuidSchema, async (classId) => {
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedClass(user.id, classId);
 
 	return await sql<StudentAttendanceSummary[]>`
 		SELECT student_name, student_email, total_sessions,
@@ -113,7 +108,7 @@ export const getClassStudentSummary = query(uuidSchema, async (classId) => {
 
 export const getNetworkRestrictions = query(uuidSchema, async (classId) => {
 	const user = await getFaculty();
-	await getClass(classId);
+	await requireOwnedClass(user.id, classId);
 
 	const plan = await getFacultyPlan(user.id);
 	const restrictions = await sql<ClassNetworkRestrictionRow[]>`
@@ -131,7 +126,7 @@ export const addNetworkRestriction = command(
 	async ({ classId, allowedAsn }) => {
 		const user = await getFaculty();
 		await requirePlan(user.id, 'enterprise');
-		await getClass(classId);
+		await requireOwnedClass(user.id, classId);
 
 		await sql`
 			INSERT INTO class_network_restrictions (class_id, allowed_asn)
@@ -148,7 +143,7 @@ export const removeNetworkRestriction = command(
 	async ({ classId, allowedAsn }) => {
 		const user = await getFaculty();
 		await requirePlan(user.id, 'enterprise');
-		await getClass(classId);
+		await requireOwnedClass(user.id, classId);
 
 		await sql`
 			DELETE FROM class_network_restrictions
