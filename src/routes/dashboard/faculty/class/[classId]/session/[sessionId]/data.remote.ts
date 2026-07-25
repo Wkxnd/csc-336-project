@@ -1,6 +1,5 @@
 import { query, command } from '$app/server';
 import { sql } from '$lib/server/db';
-import { createHmac } from 'crypto';
 import {
 	uuidSchema,
 	startAttendanceSchema,
@@ -9,41 +8,25 @@ import {
 	type AttendanceRecord
 } from '$lib/types';
 import { getFaculty } from '$lib/auth.remote';
+import { requireOwnedSession, requireStudentEnrollment } from '$lib/server/authorization';
+import { getNextQrWindowDelay, getQrToken, QR_TOKEN_WINDOW_MS } from '$lib/server/attendance';
 import { error } from '@sveltejs/kit';
 import { requirePlan } from '$lib/server/plans';
-
-const QR_TOKEN_WINDOW_MS = 15_000;
-
-function getQrToken(secret: string, offset: number = 0, now = Date.now()): string {
-	const timeWindow = Math.floor(now / QR_TOKEN_WINDOW_MS) + offset;
-	return createHmac('sha256', secret).update(timeWindow.toString()).digest('hex');
-}
 
 function sleep(ms: number) {
 	return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-function getNextQrWindowDelay(now = Date.now()) {
-	const nextWindow = (Math.floor(now / QR_TOKEN_WINDOW_MS) + 1) * QR_TOKEN_WINDOW_MS;
-	return nextWindow - now;
-}
-
 export const getSession = query(uuidSchema, async (sessionId) => {
-	await getFaculty();
-
-	const [row] = await sql<ClassSessionRow[]>`
-		SELECT *
-		FROM class_sessions
-		WHERE id = ${sessionId}
-	`;
-
-	return row ?? error(404, 'Session not found');
+	const user = await getFaculty();
+	return await requireOwnedSession(user.id, sessionId);
 });
 
 export const startAttendance = command(
 	startAttendanceSchema,
 	async ({ sessionId, durationMinutes }) => {
-		await getFaculty();
+		const user = await getFaculty();
+		await requireOwnedSession(user.id, sessionId);
 
 		await sql`
 			CALL start_attendance_session(
@@ -52,15 +35,7 @@ export const startAttendance = command(
 			)
 		`;
 
-		const [session] = await sql<ClassSessionRow[]>`
-			SELECT *
-			FROM class_sessions
-			WHERE id = ${sessionId}
-		`;
-
-		if (!session) {
-			error(404, 'Session not found');
-		}
+		const session = await requireOwnedSession(user.id, sessionId);
 
 		void getSession(sessionId).set(session);
 		void getLiveRotatingQrToken(sessionId).reconnect();
@@ -68,13 +43,16 @@ export const startAttendance = command(
 );
 
 export const stopAttendance = command(uuidSchema, async (sessionId) => {
-	await getFaculty();
+	const user = await getFaculty();
 
 	const [session] = await sql<ClassSessionRow[]>`
-		UPDATE class_sessions
+		UPDATE class_sessions cs
 		SET attendance_expires_at = NOW()
-		WHERE id = ${sessionId}
-		RETURNING *
+		FROM classes c
+		WHERE cs.id = ${sessionId}
+			AND c.id = cs.class_id
+			AND c.faculty_id = ${user.id}
+		RETURNING cs.*
 	`;
 
 	if (!session) {
@@ -86,16 +64,21 @@ export const stopAttendance = command(uuidSchema, async (sessionId) => {
 });
 
 export const getLiveRotatingQrToken = query.live(uuidSchema, async function* (sessionId) {
-	await getFaculty();
+	const user = await getFaculty();
 
 	while (true) {
 		const [session] = await sql<
 			{ qr_secret: string | null; attendance_expires_at: string | null }[]
 		>`
-			SELECT qr_secret, attendance_expires_at
-			FROM class_sessions
-			WHERE id = ${sessionId}
+			SELECT cs.qr_secret, cs.attendance_expires_at
+			FROM class_sessions cs
+			JOIN classes c ON c.id = cs.class_id
+			WHERE cs.id = ${sessionId} AND c.faculty_id = ${user.id}
 		`;
+
+		if (!session) {
+			error(404, 'Session not found');
+		}
 
 		const expiresAt = session?.attendance_expires_at ?? null;
 		const expiresAtMs = expiresAt ? new Date(expiresAt).getTime() : null;
@@ -123,7 +106,8 @@ export const getLiveRotatingQrToken = query.live(uuidSchema, async function* (se
 });
 
 export const getSessionAttendance = query(uuidSchema, async (sessionId) => {
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedSession(user.id, sessionId);
 
 	return await sql<AttendanceRecord[]>`
 		SELECT
@@ -151,7 +135,9 @@ export const getSessionAttendance = query(uuidSchema, async (sessionId) => {
 export const updateAttendanceStatus = command(
 	updateAttendanceStatusSchema,
 	async ({ sessionId, studentId, status }) => {
-		await getFaculty();
+		const user = await getFaculty();
+		const session = await requireOwnedSession(user.id, sessionId);
+		await requireStudentEnrollment(studentId, session.class_id);
 
 		await sql`
 			INSERT INTO attendance_records (
@@ -177,6 +163,9 @@ export const updateAttendanceStatus = command(
 );
 
 export const getLiveAttendanceCount = query.live(uuidSchema, async function* (sessionId) {
+	const user = await getFaculty();
+	await requireOwnedSession(user.id, sessionId);
+
 	while (true) {
 		const [result] = await sql<[{ present_count: string; total_count: string }]>`
 			SELECT
@@ -204,7 +193,8 @@ export const getLiveAttendanceCount = query.live(uuidSchema, async function* (se
 
 /** Live-streaming list of only the students who have marked attendance, newest first. */
 export const getLiveCheckIns = query.live(uuidSchema, async function* (sessionId) {
-	await getFaculty();
+	const user = await getFaculty();
+	await requireOwnedSession(user.id, sessionId);
 
 	while (true) {
 		const checkedIn = await sql<
@@ -235,6 +225,7 @@ export const getLiveCheckIns = query.live(uuidSchema, async function* (sessionId
 
 export const exportSessionCsv = query(uuidSchema, async (sessionId) => {
 	const user = await getFaculty();
+	await requireOwnedSession(user.id, sessionId);
 	await requirePlan(user.id, 'premium');
 
 	const rows = await sql<AttendanceRecord[]>`

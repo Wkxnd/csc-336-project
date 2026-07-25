@@ -1,24 +1,10 @@
 import { query, form, getRequestEvent } from '$app/server';
 import { sql } from '$lib/server/db';
-import { scryptSync, randomBytes, timingSafeEqual } from 'crypto';
 import { error, invalid, redirect } from '@sveltejs/kit';
 import { createUserSession, destroySession, SESSION_COOKIE_NAME } from '$lib/server/session';
+import { hashPassword, verifyPassword } from '$lib/server/password';
 import { loginSchema, registerSchema, type User, type UserRow } from '$lib/types';
 import * as v from 'valibot';
-
-// --- Password Hashing Helpers ---
-
-function hashPassword(password: string): string {
-	const salt = randomBytes(16).toString('hex');
-	const hash = scryptSync(password, salt, 64).toString('hex');
-	return `${salt}:${hash}`;
-}
-
-function verifyPassword(password: string, stored: string): boolean {
-	const [salt, hash] = stored.split(':');
-	const computedHash = scryptSync(password, salt, 64).toString('hex');
-	return timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computedHash, 'hex'));
-}
 
 // TODO: fix
 function authRedirect(url: URL) {

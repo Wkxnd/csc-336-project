@@ -1,9 +1,9 @@
 import { query } from '$app/server';
 import { getStudent } from '$lib/auth.remote';
+import { requireStudentEnrollment } from '$lib/server/authorization';
 import { sql } from '$lib/server/db';
 import { uuidSchema, type Class } from '$lib/types';
 import { error } from '@sveltejs/kit';
-
 
 export const getClass = query(uuidSchema, async (classId) => {
 	const user = await getStudent();
@@ -21,6 +21,7 @@ export const getClass = query(uuidSchema, async (classId) => {
 
 export const getStudentAttendanceHistory = query(uuidSchema, async (classId) => {
 	const user = await getStudent();
+	await requireStudentEnrollment(user.id, classId);
 
 	return await sql<
 		{

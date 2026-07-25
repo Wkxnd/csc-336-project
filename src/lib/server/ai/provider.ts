@@ -10,5 +10,10 @@ export function getVertex() {
 }
 
 export function getChatModel() {
-	return getVertex()(env.VERTEX_MODEL);
+	const model = env.VERTEX_MODEL;
+	if (!model) {
+		throw new Error('VERTEX_MODEL is required');
+	}
+
+	return getVertex()(model);
 }
