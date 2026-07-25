@@ -30,12 +30,7 @@
 			name: 'Enterprise',
 			price: PLAN_PRICES.enterprise,
 			blurb: 'Campus-grade controls for fraud-resistant check-ins.',
-			features: [
-				'Everything in Premium',
-				'ASN / campus network allowlists',
-				'Check-in IP enforcement',
-				'Priority classroom security'
-			]
+			features: ['Everything in Premium', 'ASN / campus network allowlists', 'SSO Integration']
 		}
 	];
 </script>
