@@ -105,7 +105,6 @@
 
 	const SOURCE_COLORS: Record<string, string> = {
 		subscription: 'var(--color-ink)',
-		service_fee: 'var(--color-gradient-sky)',
 		ads: 'var(--color-gradient-peach)',
 		data_sale: 'var(--color-gradient-mint)'
 	};

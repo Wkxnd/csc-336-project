@@ -36,7 +36,11 @@
 		props={{
 			xAxis: {
 				format: (d: any) =>
-					new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+					new Date(d).toLocaleDateString(undefined, {
+						month: 'short',
+						day: 'numeric',
+						timeZone: 'UTC'
+					})
 			},
 			yAxis: {
 				format: (v: any) => `${v}%`

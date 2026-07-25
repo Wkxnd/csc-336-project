@@ -190,8 +190,6 @@ try {
 			(${faculty.id}, 29.99, 'USD', 'subscription', 'Premium plan subscription', ${monthsAgo(2)}),
 			(${facultyEnterprise.id}, 99.00, 'USD', 'subscription', 'Enterprise plan subscription', ${monthsAgo(0)}),
 			(${facultyEnterprise.id}, 99.00, 'USD', 'subscription', 'Enterprise plan subscription', ${monthsAgo(1)}),
-			(${faculty.id}, 4.50, 'USD', 'service_fee', 'Per-session processing fee', ${monthsAgo(0)}),
-			(${facultyEnterprise.id}, 12.00, 'USD', 'service_fee', 'Per-session processing fee', ${monthsAgo(1)}),
 			(NULL, 85.00, 'USD', 'ads', 'Campus partner display ads', ${monthsAgo(0)}),
 			(NULL, 60.00, 'USD', 'ads', 'Campus partner display ads', ${monthsAgo(2)}),
 			(NULL, 150.00, 'USD', 'data_sale', 'Anonymized attendance trend pack', ${monthsAgo(1)})

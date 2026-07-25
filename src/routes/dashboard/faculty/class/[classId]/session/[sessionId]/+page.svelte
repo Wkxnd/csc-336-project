@@ -17,6 +17,7 @@
 	import CountdownTimer from '$lib/components/CountdownTimer.svelte';
 	import LiveCheckInList from '$lib/components/LiveCheckInList.svelte';
 	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
+	import { formatCalendarDate } from '$lib/date';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
@@ -37,7 +38,7 @@
 	const classCode = $derived((await getClass(classId)).code);
 
 	const formattedSessionDate = $derived(
-		new Date(session.session_date).toLocaleDateString(undefined, {
+		formatCalendarDate(session.session_date, {
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric'

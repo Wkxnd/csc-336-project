@@ -4,6 +4,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import Badge from '$lib/components/Badge.svelte';
 	import { breadcrumbs } from '$lib/breadcrumbs.svelte';
+	import { formatCalendarDate } from '$lib/date';
 	import type { PageProps } from './$types';
 
 	let { params }: PageProps = $props();
@@ -73,7 +74,7 @@
 					>
 						<div class="min-w-0">
 							<span class="font-body-strong text-ink text-sm block">
-								{new Date(r.session_date).toLocaleDateString(undefined, {
+								{formatCalendarDate(r.session_date, {
 									weekday: 'long',
 									month: 'long',
 									day: 'numeric',

@@ -54,7 +54,7 @@ export interface UserSessionRow {
 }
 
 export type SubscriptionPlan = 'free' | 'premium' | 'enterprise';
-export type RevenueSource = 'subscription' | 'service_fee' | 'ads' | 'data_sale';
+export type RevenueSource = 'subscription' | 'ads' | 'data_sale';
 
 export interface SubscriptionRow {
 	id: string;
